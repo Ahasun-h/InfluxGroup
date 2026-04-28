@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { 
   Zap, 
   Settings, 
@@ -21,6 +21,9 @@ import {
 
 const isMenuOpen = ref(false)
 const scrolled = ref(false)
+const selectedProject = ref(null)
+const projectFilter = ref('all')
+const activeProjectIndex = ref(-1)
 
 const productCategories = [
   { name: 'Transformers', icon: Zap, count: '45+' },
@@ -74,9 +77,74 @@ const team = [
 ]
 
 const featuredProjects = [
-  { title: 'Matarbari Power Hub', capacity: '1200MW', type: 'Grid Infrastructure', image: 'https://images.unsplash.com/photo-1466611653911-95282fc3656b?auto=format&fit=crop&q=80&w=1200' },
-  { title: 'Northern Solar Farm', capacity: '50MW', type: 'Renewable Energy', image: 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&q=80&w=1200' }
+  {
+    title: 'Matarbari Power Hub',
+    capacity: '1200MW',
+    type: 'Grid Infrastructure',
+    category: 'infrastructure',
+    image: 'https://images.unsplash.com/photo-1466611653911-95282fc3656b?auto=format&fit=crop&q=80&w=1200',
+    location: 'Cox\'s Bazar, Bangladesh',
+    completion: '2024',
+    description: 'Ultra-mega power project featuring state-of-the-art coal-fired technology with environmental compliance systems.',
+    highlights: ['1200MW Capacity', 'Deep Sea Water Cooling', '500kV Transmission Network', 'Environmental Monitoring Systems'],
+    stats: { efficiency: '42.5', uptime: '99.8', co2: '-15%' }
+  },
+  {
+    title: 'Northern Solar Farm',
+    capacity: '50MW',
+    type: 'Renewable Energy',
+    category: 'renewable',
+    image: 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&q=80&w=1200',
+    location: 'Rangpur Division, Bangladesh',
+    completion: '2023',
+    description: 'Utility-scale solar installation with smart grid integration and battery storage systems.',
+    highlights: ['50MW Generation', '100,000+ Solar Panels', 'Grid-Scale Battery Storage', 'Remote Monitoring AI'],
+    stats: { efficiency: '22.8', uptime: '99.2', co2: '-100%' }
+  },
+  {
+    title: 'Dhaka Smart Grid',
+    capacity: '800MW',
+    type: 'Grid Modernization',
+    category: 'infrastructure',
+    image: 'https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?auto=format&fit=crop&q=80&w=1200',
+    location: 'Dhaka, Bangladesh',
+    completion: '2024',
+    description: 'Complete grid transformation with intelligent fault detection and self-healing capabilities.',
+    highlights: ['AI-Powered Distribution', 'Smart Meter Integration', 'Fault Prediction System', 'Real-time Load Balancing'],
+    stats: { efficiency: '35.2', uptime: '99.9', co2: '-8%' }
+  },
+  {
+    title: 'Chittagong Wind Corridor',
+    capacity: '120MW',
+    type: 'Renewable Energy',
+    category: 'renewable',
+    image: 'https://images.unsplash.com/photo-1532601224476-15c79f2f7a51?auto=format&fit=crop&q=80&w=1200',
+    location: 'Chittagong Hill Tracts',
+    completion: '2025',
+    description: 'First large-scale wind farm in Bangladesh with terrain-optimized turbine placement.',
+    highlights: ['48 Wind Turbines', 'Terrain Optimization', 'Avian Safety Systems', 'Community Benefit Sharing'],
+    stats: { efficiency: '38.5', uptime: '98.5', co2: '-100%' }
+  }
 ]
+
+const filteredProjects = computed(() => {
+  if (projectFilter.value === 'all') return featuredProjects
+  return featuredProjects.filter(p => p.category === projectFilter.value)
+})
+
+const openProjectModal = (project) => {
+  selectedProject.value = project
+  document.body.style.overflow = 'hidden'
+}
+
+const closeProjectModal = () => {
+  selectedProject.value = null
+  document.body.style.overflow = 'auto'
+}
+
+const setProjectFilter = (filter) => {
+  projectFilter.value = filter
+}
 
 onMounted(() => {
   window.addEventListener('scroll', () => {
@@ -309,35 +377,239 @@ onMounted(() => {
       </div>
     </section>
 
-    <!-- Success Matrix (Engineering Scale) -->
-    <section class="py-20 md:py-32 bg-industrial-dark text-white relative">
-      <div class="absolute top-0 right-0 w-1/3 h-full bg-industrial-blue/5 blur-[120px]"></div>
-      <div class="max-w-7xl mx-auto px-6">
-        <div class="grid lg:grid-cols-12 gap-12 md:gap-16 items-center">
+    <!-- Success Matrix (Enhanced Interactive) -->
+    <section class="py-20 md:py-32 bg-industrial-dark text-white relative overflow-hidden">
+      <!-- Animated Background -->
+      <div class="absolute top-0 right-0 w-1/3 h-full bg-industrial-blue/5 blur-[120px] animate-pulse"></div>
+      <div class="absolute bottom-0 left-0 w-1/4 h-full bg-industrial-red/5 blur-[100px]"></div>
+
+      <div class="max-w-7xl mx-auto px-6 relative z-10">
+        <div class="grid lg:grid-cols-12 gap-12 md:gap-16 items-center mb-12">
           <div class="lg:col-span-4" v-motion-slide-visible-left>
              <span class="text-industrial-red font-black uppercase tracking-widest text-[10px] block mb-4 underline decoration-2 underline-offset-8">Featured Deployments</span>
-             <h2 class="text-5xl md:text-6xl font-display font-black uppercase italic leading-[0.9] mb-10 text-gradient-blue shadow-white/10 shadow-sm">THE ENERGY <br/> <span class="text-white">MATRIX</span></h2>
-             <p class="text-slate-400 leading-relaxed mb-10 text-base md:text-lg">
-               Engineering large-scale infrastructure requires more than just parts; it requires a legacy of trust and a vision for long-term sustainability.
+             <h2 class="text-5xl md:text-6xl font-display font-black uppercase italic leading-[0.9] mb-6 text-gradient-blue">THE ENERGY <br/> <span class="text-white">MATRIX</span></h2>
+             <p class="text-slate-400 leading-relaxed mb-8 text-sm md:text-base">
+               Engineering large-scale infrastructure with interactive project tracking and real-time performance monitoring.
              </p>
-             <button class="w-full py-4 md:py-5 border-2 border-industrial-blue text-industrial-blue font-black uppercase tracking-[0.3em] text-[10px] hover:bg-industrial-blue hover:text-white transition-all rounded-sm shadow-lg">
-                GLOBAL PROJECT REPOSITORY
+
+             <!-- Interactive Filter Buttons -->
+             <div class="flex flex-wrap gap-2 mb-8">
+               <button
+                 @click="setProjectFilter('all')"
+                 :class="projectFilter === 'all' ? 'bg-industrial-blue text-white' : 'bg-white/5 text-slate-400 hover:bg-white/10'"
+                 class="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-industrial-blue/20 transition-all rounded-sm"
+               >
+                 All Projects
+               </button>
+               <button
+                 @click="setProjectFilter('infrastructure')"
+                 :class="projectFilter === 'infrastructure' ? 'bg-industrial-blue text-white' : 'bg-white/5 text-slate-400 hover:bg-white/10'"
+                 class="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-industrial-blue/20 transition-all rounded-sm"
+               >
+                 Infrastructure
+               </button>
+               <button
+                 @click="setProjectFilter('renewable')"
+                 :class="projectFilter === 'renewable' ? 'bg-industrial-blue text-white' : 'bg-white/5 text-slate-400 hover:bg-white/10'"
+                 class="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-industrial-blue/20 transition-all rounded-sm"
+               >
+                 Renewable
+               </button>
+             </div>
+
+             <button class="w-full py-4 md:py-5 border-2 border-industrial-blue text-industrial-blue font-black uppercase tracking-[0.3em] text-[10px] hover:bg-industrial-blue hover:text-white transition-all rounded-sm shadow-lg group">
+                GLOBAL REPOSITORY <ArrowUpRight class="inline w-4 h-4 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
              </button>
           </div>
-          <div class="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-8" v-motion-slide-visible-right>
-             <div v-for="(project, idx) in featuredProjects" :key="idx" class="relative group rounded-sm overflow-hidden aspect-[10/12] shadow-2xl">
-                <img :src="project.image" class="w-full h-full object-cover grayscale brightness-75 transition-transform duration-[3s] group-hover:scale-110" />
-                <div class="absolute inset-0 bg-gradient-to-t from-industrial-dark via-industrial-dark/20 to-transparent"></div>
-                <div class="absolute inset-0 border-4 md:border-8 border-transparent group-hover:border-industrial-blue/20 transition-all duration-500"></div>
-                <div class="absolute bottom-0 left-0 p-8 md:p-10 w-full transition-transform duration-700 group-hover:-translate-y-2">
-                   <div class="text-[10px] text-industrial-blue font-black uppercase tracking-[0.4em] mb-4 drop-shadow-lg">{{ project.type }}</div>
-                   <h3 class="text-3xl md:text-4xl font-display font-black uppercase italic mb-4 leading-tight shadow-black shadow-sm">{{ project.title }}</h3>
-                   <div class="h-1 w-0 bg-industrial-blue group-hover:w-full transition-all duration-700"></div>
+
+          <!-- Enhanced Project Grid -->
+          <div class="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6" v-motion-slide-visible-right>
+             <div
+               v-for="(project, idx) in filteredProjects"
+               :key="idx"
+               @click="openProjectModal(project)"
+               @mouseenter="activeProjectIndex = idx"
+               @mouseleave="activeProjectIndex = -1"
+               class="relative group rounded-sm overflow-hidden aspect-[10/12] shadow-2xl cursor-pointer transform transition-all duration-500 hover:scale-[1.02] hover:shadow-industrial-blue/20"
+             >
+                <!-- Background Image -->
+                <img
+                  :src="project.image"
+                  class="w-full h-full object-cover grayscale brightness-75 transition-all duration-700 group-hover:grayscale-0 group-hover:brightness-100 group-hover:scale-110"
+                  :alt="project.title"
+                />
+
+                <!-- Overlays -->
+                <div class="absolute inset-0 bg-gradient-to-t from-industrial-dark via-industrial-dark/40 to-transparent"></div>
+                <div class="absolute inset-0 border-4 md:border-8 border-transparent group-hover:border-industrial-blue/30 transition-all duration-500"></div>
+
+                <!-- Quick Stats Badge -->
+                <div class="absolute top-4 right-4 bg-industrial-blue/90 backdrop-blur-md px-3 py-1 rounded-sm">
+                  <div class="text-[10px] font-black uppercase tracking-widest text-white">{{ project.capacity }}</div>
                 </div>
+
+                <!-- Content -->
+                <div class="absolute bottom-0 left-0 p-6 md:p-8 w-full transition-all duration-500">
+                   <div class="flex items-center justify-between mb-3">
+                     <div class="text-[10px] text-industrial-blue font-black uppercase tracking-[0.4em] drop-shadow-lg">{{ project.type }}</div>
+                     <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-industrial-blue transition-colors">
+                       <ArrowUpRight class="w-4 h-4 text-white group-hover:rotate-45 transition-transform duration-300" />
+                     </div>
+                   </div>
+                   <h3 class="text-2xl md:text-3xl font-display font-black uppercase italic mb-3 leading-tight text-white">{{ project.title }}</h3>
+                   <div class="flex items-center gap-2 text-[10px] text-slate-400 group-hover:text-white transition-colors">
+                     <MapPin class="w-3 h-3" />
+                     <span class="font-medium">{{ project.location }}</span>
+                   </div>
+
+                   <!-- Progress Bar -->
+                   <div class="mt-4">
+                     <div class="flex justify-between text-[8px] font-black uppercase tracking-widest mb-1">
+                       <span class="text-slate-400">Completion</span>
+                       <span class="text-industrial-blue">{{ project.completion }}</span>
+                     </div>
+                     <div class="h-1 bg-white/10 rounded-full overflow-hidden">
+                       <div class="h-full bg-gradient-to-r from-industrial-blue to-industrial-red rounded-full transition-all duration-1000 group-hover:w-full" style="width: 85%"></div>
+                     </div>
+                   </div>
+
+                   <!-- Expand Hint -->
+                   <div class="mt-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-industrial-blue opacity-0 group-hover:opacity-100 transition-opacity">
+                     <span>View Details</span>
+                     <div class="h-px bg-industrial-blue flex-1"></div>
+                   </div>
+                </div>
+
+                <!-- Hover Glow Effect -->
+                <div class="absolute inset-0 bg-gradient-to-t from-industrial-blue/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
              </div>
           </div>
         </div>
+
+        <!-- Quick Stats Row -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 pt-12 border-t border-white/10" v-motion-slide-visible-bottom>
+          <div class="text-center group">
+             <div class="text-4xl md:text-5xl font-display font-black text-industrial-blue mb-2 group-hover:scale-110 transition-transform">{{ filteredProjects.length }}+</div>
+             <div class="text-[10px] font-black uppercase tracking-widest text-slate-500">Active Projects</div>
+          </div>
+          <div class="text-center group">
+             <div class="text-4xl md:text-5xl font-display font-black text-industrial-blue mb-2 group-hover:scale-110 transition-transform">2.1GW</div>
+             <div class="text-[10px] font-black uppercase tracking-widest text-slate-500">Total Capacity</div>
+          </div>
+          <div class="text-center group">
+             <div class="text-4xl md:text-5xl font-display font-black text-industrial-blue mb-2 group-hover:scale-110 transition-transform">99.9%</div>
+             <div class="text-[10px] font-black uppercase tracking-widest text-slate-500">Uptime Record</div>
+          </div>
+          <div class="text-center group">
+             <div class="text-4xl md:text-5xl font-display font-black text-industrial-blue mb-2 group-hover:scale-110 transition-transform">24/7</div>
+             <div class="text-[10px] font-black uppercase tracking-widest text-slate-500">Monitoring</div>
+          </div>
+        </div>
       </div>
+
+      <!-- Project Detail Modal -->
+      <Transition
+        enter-active-class="transition-all duration-300"
+        enter-from-class="opacity-0 scale-95"
+        enter-to-class="opacity-100 scale-100"
+        leave-active-class="transition-all duration-200"
+        leave-from-class="opacity-100 scale-100"
+        leave-to-class="opacity-0 scale-95"
+      >
+        <div
+          v-if="selectedProject"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
+          @click.self="closeProjectModal"
+        >
+          <!-- Backdrop -->
+          <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" @click="closeProjectModal"></div>
+
+          <!-- Modal Content -->
+          <div class="relative bg-industrial-dark border border-industrial-blue/20 rounded-lg shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+             <!-- Close Button -->
+             <button
+               @click="closeProjectModal"
+               class="absolute top-4 right-4 z-10 w-10 h-10 bg-industrial-blue rounded-full flex items-center justify-center text-white hover:bg-industrial-red transition-colors"
+             >
+               <X class="w-5 h-5" />
+             </button>
+
+             <div class="grid md:grid-cols-2">
+               <!-- Image Side -->
+               <div class="relative h-64 md:h-auto">
+                 <img :src="selectedProject.image" class="w-full h-full object-cover" :alt="selectedProject.title" />
+                 <div class="absolute inset-0 bg-gradient-to-t from-industrial-dark via-transparent to-transparent md:bg-gradient-to-r"></div>
+                 <div class="absolute top-4 left-4 bg-industrial-red text-white px-4 py-2 rounded-sm">
+                   <div class="text-[10px] font-black uppercase tracking-widest">{{ selectedProject.capacity }}</div>
+                 </div>
+               </div>
+
+               <!-- Content Side -->
+               <div class="p-6 md:p-10">
+                 <div class="text-[10px] text-industrial-blue font-black uppercase tracking-[0.4em] mb-3">{{ selectedProject.type }}</div>
+                 <h3 class="text-3xl md:text-4xl font-display font-black uppercase italic mb-4 leading-tight">{{ selectedProject.title }}</h3>
+
+                 <p class="text-slate-300 leading-relaxed mb-8">{{ selectedProject.description }}</p>
+
+                 <!-- Quick Info -->
+                 <div class="grid grid-cols-2 gap-4 mb-8">
+                   <div class="bg-white/5 border border-white/10 rounded-sm p-4">
+                      <div class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Location</div>
+                      <div class="text-sm font-bold flex items-center gap-2">
+                        <MapPin class="w-4 h-4 text-industrial-blue" />
+                        {{ selectedProject.location }}
+                      </div>
+                   </div>
+                   <div class="bg-white/5 border border-white/10 rounded-sm p-4">
+                      <div class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Completion</div>
+                      <div class="text-sm font-bold">{{ selectedProject.completion }}</div>
+                   </div>
+                 </div>
+
+                 <!-- Highlights -->
+                 <div class="mb-8">
+                   <h4 class="text-[10px] font-black uppercase tracking-widest text-industrial-blue mb-3">Key Highlights</h4>
+                   <div class="space-y-2">
+                     <div v-for="(highlight, idx) in selectedProject.highlights" :key="idx" class="flex items-center gap-3 text-sm">
+                       <div class="w-2 h-2 rounded-full bg-industrial-blue"></div>
+                       <span class="text-slate-300">{{ highlight }}</span>
+                     </div>
+                   </div>
+                 </div>
+
+                 <!-- Performance Stats -->
+                 <div>
+                   <h4 class="text-[10px] font-black uppercase tracking-widest text-industrial-blue mb-3">Performance Metrics</h4>
+                   <div class="grid grid-cols-3 gap-4">
+                     <div class="text-center">
+                       <div class="text-2xl font-display font-black text-industrial-blue">{{ selectedProject.stats.efficiency }}%</div>
+                       <div class="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-1">Efficiency</div>
+                     </div>
+                     <div class="text-center">
+                       <div class="text-2xl font-display font-black text-industrial-blue">{{ selectedProject.stats.uptime }}%</div>
+                       <div class="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-1">Uptime</div>
+                     </div>
+                     <div class="text-center">
+                       <div class="text-2xl font-display font-black text-green-400">{{ selectedProject.stats.co2 }}</div>
+                       <div class="text-[8px] font-black uppercase tracking-widest text-slate-500 mt-1">CO₂ Impact</div>
+                     </div>
+                   </div>
+                 </div>
+
+                 <!-- CTA -->
+                 <div class="mt-8 flex gap-4">
+                   <button class="flex-1 bg-industrial-blue hover:bg-industrial-red text-white py-3 font-black uppercase tracking-[0.3em] text-[10px] transition-colors rounded-sm">
+                     Technical Specs
+                   </button>
+                   <button class="flex-1 border-2 border-industrial-blue text-industrial-blue hover:bg-industrial-blue hover:text-white py-3 font-black uppercase tracking-[0.3em] text-[10px] transition-all rounded-sm">
+                     Contact Team
+                   </button>
+                 </div>
+               </div>
+             </div>
+          </div>
+        </div>
+      </Transition>
     </section>
 
     <!-- Technical Spec / Monitoring (Tech Forward) -->
