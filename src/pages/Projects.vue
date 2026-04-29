@@ -122,7 +122,7 @@ const projects = [
     </section>
 
     <!-- Filter Section -->
-    <section class="py-12 bg-white border-b sticky top-20 z-30 shadow-md">
+    <section class="py-12 bg-white border-b top-20 z-30 shadow-md">
       <div class="max-w-7xl mx-auto px-6">
         <div class="flex flex-wrap gap-4 justify-center">
           <button

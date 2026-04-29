@@ -115,7 +115,7 @@ const filteredProducts = computed(() => {
     </section>
 
     <!-- Category Filter -->
-    <section class="py-8 md:py-12 bg-white border-b sticky top-[84px] lg:top-[92px] z-40 shadow-md">
+    <section class="py-8 md:py-12 bg-white border-b top-[84px] lg:top-[92px] z-40 shadow-md">
       <div class="max-w-7xl mx-auto px-6">
         <div class="flex flex-wrap gap-3 md:gap-4 justify-center">
           <button
