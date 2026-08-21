@@ -10,7 +10,7 @@
             </div>
         </div>
 
-        <!-- Live Preview Section -->
+        <!-- Live preview Section -->
         <div class="glass-card p-8">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">

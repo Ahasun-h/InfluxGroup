@@ -155,7 +155,7 @@ onMounted(async () => {
                 {{ project.title }}
               </h3>
 
-              <!-- Description/Body Preview -->
+              <!-- Description/Body preview -->
               <div v-if="project.description || project.body" class="text-slate-600 text-sm mb-4 leading-relaxed line-clamp-2">
                 {{ project.description || project.body }}
               </div>

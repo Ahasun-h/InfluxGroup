@@ -8,7 +8,7 @@
             </div>
         </div>
 
-        <!-- Live Preview Section -->
+        <!-- Live preview Section -->
         <div class="glass-card p-8">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">
@@ -34,7 +34,7 @@
                 </div>
             </div>
 
-            <!-- Journey Timeline Preview -->
+            <!-- Journey Timeline preview -->
             <section class="py-20 md:py-32 bg-industrial-light rounded-xl border border-gray-200 dark:border-surface-600">
                 <div class="max-w-7xl mx-auto px-6">
                     <div class="text-center mb-16">

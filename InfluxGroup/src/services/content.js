@@ -499,6 +499,26 @@ export const contactCtaService = {
 }
 
 /**
+ * Subscription Section Service
+ */
+export const subscriptionSectionService = {
+  /**
+   * Get subscription section data
+   */
+  async getSubscriptionSectionData() {
+    try {
+      console.log('subscriptionSectionService: Fetching from', API_ENDPOINTS.SUBSCRIPTION_SECTION)
+      const response = await api.get(API_ENDPOINTS.SUBSCRIPTION_SECTION)
+      console.log('subscriptionSectionService: Response received', response)
+      return response
+    } catch (error) {
+      console.error('subscriptionSectionService: Error fetching subscription section data', error)
+      throw error
+    }
+  },
+}
+
+/**
  * Career CTA Service
  */
 export const careerCtaService = {
@@ -578,6 +598,93 @@ export const contactSectionService = {
   },
 }
 
+/**
+ * About Page Services
+ */
+export const aboutHeroService = {
+  async getHeroData() {
+    try {
+      console.log('aboutHeroService: Fetching from', API_ENDPOINTS.ABOUT_HERO)
+      const response = await api.get(API_ENDPOINTS.ABOUT_HERO)
+      console.log('aboutHeroService: Response received', response)
+      return response
+    } catch (error) {
+      console.error('aboutHeroService: Error fetching about hero data', error)
+      throw error
+    }
+  },
+}
+
+export const aboutMissionVisionService = {
+  async getMissionVisionData() {
+    try {
+      console.log('aboutMissionVisionService: Fetching from', API_ENDPOINTS.ABOUT_MISSION_VISION)
+      const response = await api.get(API_ENDPOINTS.ABOUT_MISSION_VISION)
+      console.log('aboutMissionVisionService: Response received', response)
+      return response
+    } catch (error) {
+      console.error('aboutMissionVisionService: Error fetching about mission vision data', error)
+      throw error
+    }
+  },
+}
+
+export const aboutJourneyService = {
+  async getJourneyData() {
+    try {
+      console.log('aboutJourneyService: Fetching from', API_ENDPOINTS.ABOUT_JOURNEY)
+      const response = await api.get(API_ENDPOINTS.ABOUT_JOURNEY)
+      console.log('aboutJourneyService: Response received', response)
+      return response
+    } catch (error) {
+      console.error('aboutJourneyService: Error fetching about journey data', error)
+      throw error
+    }
+  },
+}
+
+export const aboutCoreValuesService = {
+  async getCoreValuesData() {
+    try {
+      console.log('aboutCoreValuesService: Fetching from', API_ENDPOINTS.ABOUT_CORE_VALUES)
+      const response = await api.get(API_ENDPOINTS.ABOUT_CORE_VALUES)
+      console.log('aboutCoreValuesService: Response received', response)
+      return response
+    } catch (error) {
+      console.error('aboutCoreValuesService: Error fetching about core values data', error)
+      throw error
+    }
+  },
+}
+
+export const aboutCertificationsService = {
+  async getCertificationsData() {
+    try {
+      console.log('aboutCertificationsService: Fetching from', API_ENDPOINTS.ABOUT_CERTIFICATIONS)
+      const response = await api.get(API_ENDPOINTS.ABOUT_CERTIFICATIONS)
+      console.log('aboutCertificationsService: Response received', response)
+      return response
+    } catch (error) {
+      console.error('aboutCertificationsService: Error fetching about certifications data', error)
+      throw error
+    }
+  },
+}
+
+export const aboutCareerCtaService = {
+  async getCareerCtaData() {
+    try {
+      console.log('aboutCareerCtaService: Fetching from', API_ENDPOINTS.ABOUT_CAREER_CTA)
+      const response = await api.get(API_ENDPOINTS.ABOUT_CAREER_CTA)
+      console.log('aboutCareerCtaService: Response received', response)
+      return response
+    } catch (error) {
+      console.error('aboutCareerCtaService: Error fetching about career cta data', error)
+      throw error
+    }
+  },
+}
+
 // Export all services as a combined object
 const contentService = {
   products: productService,
@@ -598,10 +705,17 @@ const contentService = {
   journey: journeyService,
   coreValues: coreValuesService,
   contactCta: contactCtaService,
+  subscriptionSection: subscriptionSectionService,
   careerCta: careerCtaService,
   contactSection: contactSectionService,
   footer: footerService,
   settings: settingsService,
+  aboutHero: aboutHeroService,
+  aboutMissionVision: aboutMissionVisionService,
+  aboutJourney: aboutJourneyService,
+  aboutCoreValues: aboutCoreValuesService,
+  aboutCertifications: aboutCertificationsService,
+  aboutCareerCta: aboutCareerCtaService,
 }
 
 // Export the combined contentService as default export

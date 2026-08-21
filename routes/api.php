@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ContentController;
 use App\Http\Controllers\Api\AnalyticsController;
+use App\Http\Controllers\Api\PagesCmsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -110,6 +111,9 @@ Route::prefix('cms')->group(function () {
     // Career CTA
     Route::get('/career-cta', [ContentController::class, 'getCareerCTA']);
 
+    // Subscription Section
+    Route::get('/subscription-section', [ContentController::class, 'getSubscriptionSection']);
+
     // Contact Section
     Route::get('/contact', [ContentController::class, 'getContactSection']);
 
@@ -127,6 +131,31 @@ Route::prefix('cms')->group(function () {
 
     // Service Categories
     Route::get('/service-categories', [ContentController::class, 'getServiceCategories']);
+
+    // About Page APIs
+    Route::prefix('about')->group(function () {
+        Route::get('/hero', [ContentController::class, 'getAboutHeroSection']);
+        Route::get('/mission-vision', [ContentController::class, 'getAboutMissionVision']);
+        Route::get('/journey', [ContentController::class, 'getAboutJourney']);
+        Route::get('/core-values', [ContentController::class, 'getAboutCoreValues']);
+        Route::get('/certifications', [ContentController::class, 'getAboutCertifications']);
+        Route::get('/career-cta', [ContentController::class, 'getAboutCareerCta']);
+    });
+
+    // Products Page APIs
+    Route::prefix('products')->group(function () {
+        Route::get('/hero', [PagesCmsController::class, 'getProductsHeroSection']);
+    });
+
+    // Projects Page APIs
+    Route::prefix('projects')->group(function () {
+        Route::get('/hero', [PagesCmsController::class, 'getProjectsHeroSection']);
+    });
+
+    // Services & Solutions Page APIs
+    Route::prefix('services')->group(function () {
+        Route::get('/hero', [PagesCmsController::class, 'getServicesHeroSection']);
+    });
 });
 
 // Analytics API (Public endpoints)

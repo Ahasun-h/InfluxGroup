@@ -239,7 +239,7 @@
             </div>
         </div>
 
-        <!-- Live Preview Section -->
+        <!-- Live preview Section -->
         <div class="glass-card p-8">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">
@@ -302,7 +302,7 @@
                                         <!-- Logo Upload Area (same as projects page) -->
                                         <div class="w-full aspect-video rounded-2xl border-2 border-dashed border-gray-200 dark:border-white/10 flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-brand-500 transition-all relative partner-logo-upload" data-partner-id="{{ $partner['id'] }}">
                                             @if(!empty($partner['logo']) && (str_starts_with($partner['logo'], 'http') || str_starts_with($partner['logo'], '/') || str_starts_with($partner['logo'], 'data:image')))
-                                                <!-- Existing Logo Preview -->
+                                                <!-- Existing Logo preview -->
                                                 <img src="{{ $partner['logo'] }}" alt="Partner Logo" class="w-full h-full object-contain rounded-2xl p-2" id="partner_logo_preview_{{ $partner['id'] }}">
                                             @else
                                                 <!-- Upload UI -->

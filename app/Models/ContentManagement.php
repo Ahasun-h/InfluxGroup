@@ -9,6 +9,7 @@ class ContentManagement extends Model
     protected $table = 'content_management';
 
     protected $fillable = [
+        'page_name',
         'section_name',
         'section_item_name',
         'section_content',

@@ -1,7 +1,43 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(php artisan:*)",
+      "Bash(icacls:*)",
+      "Bash(which php:*)",
+      "Bash(head:*)",
+      "Bash(namei:*)",
+      "Bash(test:*)",
+      "Bash(curl:*)",
+      "Bash(where php:*)",
+      "Bash(\"C:\\\\Users\\\\habib\\\\.config\\\\herd\\\\bin\\\\php.bat\" artisan:*)",
+      "Bash(cd D:\\\\Herd\\\\InfluxGroup-backend:*)",
+      "Bash(cd D:\\\\Herd\\\\InfluxGroup-backend\\\\public:*)",
+      "Bash(ls:*)",
+      "Bash(export:*)",
+      "Bash(netstat:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(node:*)",
+      "Bash(echo Testing database query...:*)",
+      "Bash(echo === OVERLAY FIELDS TEST RESULTS ===:*)",
+      "Bash(C:\\\\Users\\\\habib\\\\.config\\\\herd\\\\bin\\\\php.bat artisan:*)",
+      "Bash(\"/c/Users/habib/.config/herd/bin/php.bat\" artisan:*)",
+      "Bash(\"/c/Users/habib/.config/herd/bin/php.bat\":*)",
+      "Bash(echo === HomePageController Implementation Test ===:*)",
+      "Bash(echo === Testing Fixed Implementation ===:*)",
+      "Bash(echo === BrandStatementController Stats Fix Test ===:*)",
+      "Bash(echo === Testing BrandStatementController Stats Fix ===:*)",
+      "Bash(echo === BrandStatementController Stats Processing Test ===:*)",
+      "Bash(echo === COMPLETE BRAND STATEMENTS STATS FLOW TEST ===:*)",
+      "Bash(echo === DETAILED BRAND STATEMENTS CONTROLLER TEST ===:*)",
+      "Bash(echo Testing ContentManagement model...:*)",
+      "Bash(echo === SIMULATED STATS PROCESSING TEST ===:*)",
+      "Bash(composer dump-autoload:*)",
+      "Bash(echo 3. VUE PREVIEW PAGES ACCESS TEST::*)",
+      "Bash(tasklist:*)",
+      "Bash(timeout 3 bash:*)",
+      "Bash(cd D:\\\\Herd\\\\InfluxGroup-backend\\\\InfluxGroup:*)"
     ]
   }
 }

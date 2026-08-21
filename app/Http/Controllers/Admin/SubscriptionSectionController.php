@@ -8,18 +8,18 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
-class ContactCtaController extends Controller
+class SubscriptionSectionController extends Controller
 {
     /**
-     * Display the Contact CTA management page
+     * Display the Subscription Section management page
      */
     public function index(): View
     {
-        // Get or create CTA section content
+        // Get or create subscription section content
         $title = ContentManagement::firstOrCreate(
             [
-                'section_name' => 'cta_section',
-                'section_item_name' => 'cta_title'
+                'section_name' => 'subscription_section',
+                'section_item_name' => 'subscription_title'
             ],
             [
                 'section_content' => 'Ready to Power Your Success?',
@@ -30,11 +30,11 @@ class ContactCtaController extends Controller
 
         $description = ContentManagement::firstOrCreate(
             [
-                'section_name' => 'cta_section',
-                'section_item_name' => 'cta_description'
+                'section_name' => 'subscription_section',
+                'section_item_name' => 'subscription_description'
             ],
             [
-                'section_content' => "Let's discuss how Influx Group can deliver the power infrastructure solutions your organization needs. Our team is ready to provide expert consultation and tailored solutions.",
+                'section_content' => 'Discover how our innovative solutions can transform your business and drive sustainable growth.',
                 'attributes' => null,
                 'media_files' => null
             ]
@@ -42,11 +42,11 @@ class ContactCtaController extends Controller
 
         $buttonText = ContentManagement::firstOrCreate(
             [
-                'section_name' => 'cta_section',
-                'section_item_name' => 'cta_button_text'
+                'section_name' => 'subscription_section',
+                'section_item_name' => 'subscription_button_text'
             ],
             [
-                'section_content' => 'Get in Touch',
+                'section_content' => 'Get Started',
                 'attributes' => null,
                 'media_files' => null
             ]
@@ -54,8 +54,8 @@ class ContactCtaController extends Controller
 
         $buttonLink = ContentManagement::firstOrCreate(
             [
-                'section_name' => 'cta_section',
-                'section_item_name' => 'cta_button_link'
+                'section_name' => 'subscription_section',
+                'section_item_name' => 'subscription_button_link'
             ],
             [
                 'section_content' => '/contact',
@@ -64,23 +64,23 @@ class ContactCtaController extends Controller
             ]
         );
 
-        // Fetch all CTA section items
-        $data = ContentManagement::where('section_name', 'cta_section')
+        // Fetch all subscription section items
+        $data = ContentManagement::where('section_name', 'subscription_section')
             ->get()
             ->keyBy('section_item_name');
 
         $content = [
-            'title' => $data['cta_title']->section_content ?? 'Ready to Power Your Success?',
-            'description' => $data['cta_description']->section_content ?? "Let's discuss how Influx Group can deliver the power infrastructure solutions your organization needs.",
-            'button_text' => $data['cta_button_text']->section_content ?? 'Get in Touch',
-            'button_link' => $data['cta_button_link']->section_content ?? '/contact',
+            'title' => $data['subscription_title']->section_content ?? 'Ready to Power Your Success?',
+            'description' => $data['subscription_description']->section_content ?? 'Discover how our innovative solutions can transform your business and drive sustainable growth.',
+            'button_text' => $data['subscription_button_text']->section_content ?? 'Get Started',
+            'button_link' => $data['subscription_button_link']->section_content ?? '/contact',
         ];
 
-        return view('admin.cms-section.contact-cta-section', compact('content'));
+        return view('admin.cms-section.subscription-section', compact('content'));
     }
 
     /**
-     * Update the Contact CTA section
+     * Update the Subscription Section
      */
     public function update(Request $request): RedirectResponse
     {
@@ -88,8 +88,8 @@ class ContactCtaController extends Controller
         if ($request->has('title')) {
             ContentManagement::updateOrCreate(
                 [
-                    'section_name' => 'cta_section',
-                    'section_item_name' => 'cta_title'
+                    'section_name' => 'subscription_section',
+                    'section_item_name' => 'subscription_title'
                 ],
                 [
                     'section_content' => $request->title,
@@ -103,8 +103,8 @@ class ContactCtaController extends Controller
         if ($request->has('description')) {
             ContentManagement::updateOrCreate(
                 [
-                    'section_name' => 'cta_section',
-                    'section_item_name' => 'cta_description'
+                    'section_name' => 'subscription_section',
+                    'section_item_name' => 'subscription_description'
                 ],
                 [
                     'section_content' => $request->description,
@@ -118,8 +118,8 @@ class ContactCtaController extends Controller
         if ($request->has('button_text')) {
             ContentManagement::updateOrCreate(
                 [
-                    'section_name' => 'cta_section',
-                    'section_item_name' => 'cta_button_text'
+                    'section_name' => 'subscription_section',
+                    'section_item_name' => 'subscription_button_text'
                 ],
                 [
                     'section_content' => $request->button_text,
@@ -133,8 +133,8 @@ class ContactCtaController extends Controller
         if ($request->has('button_link')) {
             ContentManagement::updateOrCreate(
                 [
-                    'section_name' => 'cta_section',
-                    'section_item_name' => 'cta_button_link'
+                    'section_name' => 'subscription_section',
+                    'section_item_name' => 'subscription_button_link'
                 ],
                 [
                     'section_content' => $request->button_link,
@@ -144,7 +144,15 @@ class ContactCtaController extends Controller
             );
         }
 
-        return redirect()->route('admin.contact-cta.index')
-            ->with('success', 'Contact CTA section updated successfully.');
+        // Return JSON response for AJAX requests
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Subscription section updated successfully.'
+            ]);
+        }
+
+        return redirect()->route('admin.subscription-section.index')
+            ->with('success', 'Subscription section updated successfully.');
     }
 }

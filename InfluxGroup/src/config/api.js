@@ -1,6 +1,6 @@
 // API Configuration
 export const API_CONFIG = {
-  baseURL: import.meta.env.VITE_API_URL || 'http://influx-group.test/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://admin.influxgroupbd.com/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -80,9 +80,29 @@ export const API_ENDPOINTS = {
   // CMS Career CTA
   CAREER_CTA: '/cms/career-cta',
 
+  // CMS Subscription Section (Home Subscription)
+  SUBSCRIPTION_SECTION: '/cms/subscription-section',
+
   // CMS Contact Section
   CONTACT_SECTION: '/cms/contact',
 
   // Website Settings
   SETTINGS: '/cms/settings',
+
+  // About Page APIs
+  ABOUT_HERO: '/cms/about/hero',
+  ABOUT_MISSION_VISION: '/cms/about/mission-vision',
+  ABOUT_JOURNEY: '/cms/about/journey',
+  ABOUT_CORE_VALUES: '/cms/about/core-values',
+  ABOUT_CERTIFICATIONS: '/cms/about/certifications',
+  ABOUT_CAREER_CTA: '/cms/about/career-cta',
+
+  // Products Page APIs
+  PRODUCTS_HERO: '/cms/products/hero',
+
+  // Projects Page APIs
+  PROJECTS_HERO: '/cms/projects/hero',
+
+  // Services & Solutions Page APIs
+  SERVICES_HERO: '/cms/services/hero',
 }

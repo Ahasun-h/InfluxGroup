@@ -536,6 +536,27 @@ onUnmounted(() => {
             </div>
           </nav>
         </div>
+
+        <!-- Breadcrumb (visible on inner pages when scrolled) -->
+        <Transition
+          enter-active-class="transition-all duration-300 ease-in-out"
+          enter-from-class="opacity-0"
+          enter-to-class="opacity-100"
+          leave-active-class="transition-all duration-200 ease-in-out"
+          leave-from-class="opacity-100"
+          leave-to-class="opacity-0"
+        >
+          <div
+            v-if="currentPath !== '/' && scrolled"
+            class="flex items-center gap-2 text-[9px] xl:text-[10px] font-bold uppercase tracking-wider text-industrial-dark border-t border-slate-200/50 pt-2 mt-2"
+          >
+            <a @click="navigateTo('/')" class="text-industrial-blue hover:underline cursor-pointer">
+              Home
+            </a>
+            <ChevronRight class="w-2.5 h-2.5 xl:w-3 xl:h-3 text-slate-400" />
+            <span class="text-slate-600">{{ routeNameMap[currentPath] || currentNavigation.find(n => n.path === currentPath)?.name || 'Page' }}</span>
+          </div>
+        </Transition>
       </div>
     </header>
 
@@ -739,31 +760,6 @@ onUnmounted(() => {
               </button>
             </div>
           </div>
-        </div>
-      </div>
-    </Transition>
-
-    <!-- Breadcrumb (visible on inner pages) -->
-    <Transition
-      enter-active-class="transition-all duration-500 ease-in-out"
-      enter-from-class="opacity-0 -translate-y-4"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition-all duration-300 ease-in-out"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 -translate-y-4"
-    >
-      <div
-        v-if="currentPath !== '/' && scrolled"
-        class="fixed top-[60px] lg:top-[68px] left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-200 py-1.5 xl:py-2"
-      >
-        <div class="max-w-7xl mx-auto px-4 xl:px-6">
-          <nav class="flex items-center gap-2 text-[10px] xl:text-xs font-bold uppercase tracking-wider">
-            <a @click="navigateTo('/')" class="text-industrial-blue hover:underline cursor-pointer">
-              Home
-            </a>
-            <ChevronRight class="w-3 h-3 text-slate-400" />
-            <span class="text-slate-600">{{ routeNameMap[currentPath] || currentNavigation.find(n => n.path === currentPath)?.name || 'Page' }}</span>
-          </nav>
         </div>
       </div>
     </Transition>

@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <!-- Live Preview Section -->
+        <!-- Live preview Section -->
         <div class="glass-card p-8">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">
@@ -58,7 +58,7 @@
                 </div>
             </div>
 
-            <!-- Hero Preview -->
+            <!-- Hero preview -->
             <section
                 class="relative min-h-screen flex items-center pt-24 md:pt-20 pb-32 md:pb-40 overflow-hidden rounded-xl border border-gray-200 dark:border-surface-600">
                 <!-- Background Image Edit Button -->
@@ -86,8 +86,8 @@
                     <div
                         class="absolute bottom-0 w-full bg-white/5 backdrop-blur-3xl border-t border-white/10 overflow-x-auto">
                         <div
-                            class="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 min-w-[600px] md:min-w-0">
-                            @foreach($heroCategories as $category)
+                            class="max-w-7xl mx-auto px-6 grid grid-cols-3 md:grid-cols-3 divide-x divide-white/10 min-w-[600px] md:min-w-0">
+                            @foreach($heroCategories->take(3) as $category)
                                 <div
                                     class="py-6 md:py-8 px-0 group cursor-pointer hover:bg-white/5 transition-colors relative">
                                     <button onclick="editCategory({{ $category['order'] }})"
@@ -402,11 +402,12 @@
         <input type="hidden" name="seo_attributes"
             value="{{ $heroItems['hero_section_Background']->attributes ?? '' }}">
 
-        @foreach($heroCategories as $category)
+        @foreach($heroCategories->take(3) as $category)
             <input type="hidden" name="cat{{ $category['order'] }}_name" value="{{ $category['name'] }}">
             <input type="hidden" name="cat{{ $category['order'] }}_count" value="{{ $category['count'] }}">
             <input type="hidden" name="cat{{ $category['order'] }}_icon" value="{{ $category['icon'] }}">
         @endforeach
+
     </form>
 
     <!-- Single Field Edit Modal -->
@@ -587,6 +588,7 @@
             </div>
         </div>
     </div>
+
 
     <x-slot:scripts>
         <script>
@@ -807,14 +809,12 @@
                     'description': 'Edit Description',
                     'cta_button_text': 'Edit CTA Button Text',
                     'secondary_button_text': 'Edit Secondary Button Text',
-                    'cat1_title': 'Edit Category 1 Title',
-                    'cat1_subtitle': 'Edit Category 1 Subtitle',
-                    'cat2_title': 'Edit Category 2 Title',
-                    'cat2_subtitle': 'Edit Category 2 Subtitle',
-                    'cat3_title': 'Edit Category 3 Title',
-                    'cat3_subtitle': 'Edit Category 3 Subtitle',
-                    'cat4_title': 'Edit Category 4 Title',
-                    'cat4_subtitle': 'Edit Category 4 Subtitle'
+                    'cat1_name': 'Edit Category 1 Title',
+                    'cat1_count': 'Edit Category 1 Subtitle',
+                    'cat2_name': 'Edit Category 2 Title',
+                    'cat2_count': 'Edit Category 2 Subtitle',
+                    'cat3_name': 'Edit Category 3 Title',
+                    'cat3_count': 'Edit Category 3 Subtitle'
                 };
 
                 const labels = {
@@ -823,14 +823,12 @@
                     'description': 'Description',
                     'cta_button_text': 'CTA Button Text',
                     'secondary_button_text': 'Secondary Button Text',
-                    'cat1_title': 'Category 1 Title',
-                    'cat1_subtitle': 'Category 1 Subtitle',
-                    'cat2_title': 'Category 2 Title',
-                    'cat2_subtitle': 'Category 2 Subtitle',
-                    'cat3_title': 'Category 3 Title',
-                    'cat3_subtitle': 'Category 3 Subtitle',
-                    'cat4_title': 'Category 4 Title',
-                    'cat4_subtitle': 'Category 4 Subtitle'
+                    'cat1_name': 'Category 1 Title',
+                    'cat1_count': 'Category 1 Subtitle',
+                    'cat2_name': 'Category 2 Title',
+                    'cat2_count': 'Category 2 Subtitle',
+                    'cat3_name': 'Category 3 Title',
+                    'cat3_count': 'Category 3 Subtitle'
                 };
 
                 title.textContent = titles[fieldName] || 'Edit Field';
@@ -897,13 +895,6 @@
                 }
             });
 
-            // Show success message if any
-            @if(session('success'))
-            setTimeout(() => {
-                alert('{{ session('success') }}');
-            }, 100);
-            @endif
-
             // Icon SVG presets
             const iconPresets = {
                 'zap': '<svg class="w-6 h-6 md:w-8 md:h-8 text-industrial-blue group-hover:text-industrial-red transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>',
@@ -930,8 +921,7 @@
                 const titles = {
                     'cat1': 'Edit Category 1',
                     'cat2': 'Edit Category 2',
-                    'cat3': 'Edit Category 3',
-                    'cat4': 'Edit Category 4'
+                    'cat3': 'Edit Category 3'
                 };
 
                 modalTitle.textContent = titles[catId] || 'Edit Category';
@@ -985,6 +975,15 @@
                 // Auto-submit the form
                 document.getElementById('hero-form').submit();
             }
+
+            // Show success message if any
+            @if(session('success'))
+            setTimeout(() => {
+                alert('{{ session('success') }}');
+            }, 100);
+            @endif
+
+
 
             // Handle Dropify events (using event delegation since element is in modal)
             $(document).ready(function () {

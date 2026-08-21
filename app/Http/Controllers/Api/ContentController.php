@@ -531,9 +531,26 @@ class ContentController extends Controller
             ->keyBy('section_item_name');
 
         $backgroundImage = null;
-        if ($heroItems->has('hero_section_Background') && $heroItems['hero_section_Background']->media_files) {
-            $mediaFiles = json_decode($heroItems['hero_section_Background']->media_files, true);
-            $backgroundImage = $mediaFiles['source_file'] ?? null;
+        if ($heroItems->has('hero_section_Background')) {
+            $bgItem = $heroItems['hero_section_Background'];
+            $bgContent = $bgItem->section_content;
+            if ($bgContent) {
+                if (is_string($bgContent) && (str_starts_with($bgContent, '{') || str_starts_with($bgContent, '['))) {
+                    $decoded = json_decode($bgContent, true);
+                    $backgroundImage = $decoded['source_file'] ?? $decoded['url'] ?? $decoded['path'] ?? $bgContent;
+                } else {
+                    $backgroundImage = $bgContent;
+                }
+            }
+
+            if (!$backgroundImage && $bgItem->media_files) {
+                $mediaFiles = is_array($bgItem->media_files) ? $bgItem->media_files : json_decode($bgItem->media_files, true);
+                $backgroundImage = $mediaFiles['source_file'] ?? $mediaFiles['url'] ?? $mediaFiles['path'] ?? null;
+            }
+
+            if ($backgroundImage && !str_starts_with($backgroundImage, 'http://') && !str_starts_with($backgroundImage, 'https://') && !str_starts_with($backgroundImage, '/')) {
+                $backgroundImage = '/' . $backgroundImage;
+            }
         }
 
         // Get hero categories - looking for hero_section_category1, hero_section_category2, etc.
@@ -542,7 +559,7 @@ class ContentController extends Controller
             $catKey = "hero_section_category{$i}";
             $catItem = $heroItems->get($catKey);
 
-            if ($catItem) {
+            if ($catItem && $catItem->section_content) {
                 // Parse JSON content
                 $catData = json_decode($catItem->section_content, true);
 
@@ -696,9 +713,14 @@ class ContentController extends Controller
     /**
      * Get Core Values Content
      */
-    public function getCoreValues()
+    public function getCoreValues(Request $request)
     {
+        $page = $request->query('page', 'home_page'); // Default to home_page if not specified
+
         $cvItems = \App\Models\ContentManagement::where('section_name', 'core_values')
+            ->where(function ($q) use ($page) {
+                $q->where('page_name', $page)->orWhereNull('page_name');
+            })
             ->get()
             ->keyBy('section_item_name');
 
@@ -836,6 +858,28 @@ class ContentController extends Controller
         return response()->json([
             'success' => true,
             'data' => $careerCta
+        ]);
+    }
+
+    /**
+     * Get Subscription Section Data
+     */
+    public function getSubscriptionSection()
+    {
+        $subscriptionItems = \App\Models\ContentManagement::where('section_name', 'subscription_section')
+            ->get()
+            ->keyBy('section_item_name');
+
+        $subscription = [
+            'title' => $subscriptionItems['subscription_title']->section_content ?? 'Ready to Power Your Success?',
+            'description' => $subscriptionItems['subscription_description']->section_content ?? 'Discover how our innovative solutions can transform your business and drive sustainable growth.',
+            'button_text' => $subscriptionItems['subscription_button_text']->section_content ?? 'Get Started',
+            'button_link' => $subscriptionItems['subscription_button_link']->section_content ?? '/contact'
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $subscription
         ]);
     }
 
@@ -1240,4 +1284,208 @@ class ContentController extends Controller
     public function getGalleryCategories() { return response()->json(['success' => true, 'data' => []]); }
     public function getProduct($slug) { return response()->json(['success' => true, 'data' => Product::where('slug', $slug)->first()]); }
     public function getArticle($slug) { return response()->json(['success' => true, 'data' => null]); }
+
+    // About Page API Methods
+    public function getAboutHeroSection()
+    {
+        $hero = ContentManagement::where(function ($q) {
+                $q->where('page_name', 'about_page')->orWhereNull('page_name');
+            })
+            ->where('section_name', 'hero_section')
+            ->get()
+            ->keyBy('section_item_name');
+
+        $data = [
+            'badge' => $hero['hero_section_badge_text']->section_content ?? 'About Us',
+            'title' => $hero['hero_section_title']->section_content ?? 'POWERING PROGRESS SINCE 1980',
+            'description' => $hero['hero_section_description']->section_content ?? 'From humble beginnings to becoming Bangladesh\'s premier engineering conglomerate, our journey reflects four decades of excellence, innovation, and unwavering commitment to national development.'
+        ];
+
+        return response()->json(['success' => true, 'data' => $data]);
+    }
+
+    public function getAboutMissionVision()
+    {
+        $items = ContentManagement::where(function ($q) {
+                $q->where('page_name', 'about_page')->orWhereNull('page_name');
+            })
+            ->where('section_name', 'mission_vision')
+            ->get()
+            ->keyBy('section_item_name');
+
+        $mission = [
+            'title' => $items['mission_title']->section_content ?? 'OUR MISSION',
+            'description' => $items['mission_description']->section_content ?? 'To deliver reliable, efficient, and sustainable power solutions that drive Bangladesh\'s industrial growth and infrastructure development.',
+            'points' => json_decode($items['mission_points']->section_content ?? '[]', true) ?: [
+                'Powering Bangladesh\'s development through innovative energy solutions',
+                'Ensuring energy security for future generations',
+                'Building sustainable infrastructure nationwide'
+            ]
+        ];
+
+        $vision = [
+            'title' => $items['vision_title']->section_content ?? 'OUR VISION',
+            'description' => $items['vision_description']->section_content ?? 'To be the leading engineering conglomerate in South Asia, recognized globally for excellence in power infrastructure and renewable energy solutions.',
+            'points' => json_decode($items['vision_points']->section_content ?? '[]', true) ?: [
+                'Regional leadership in sustainable infrastructure development',
+                'Global recognition for engineering excellence',
+                'Pioneering renewable energy adoption'
+            ]
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'mission' => $mission,
+                'vision' => $vision
+            ]
+        ]);
+    }
+
+    public function getAboutJourney()
+    {
+        $items = ContentManagement::where(function ($q) {
+                $q->where('page_name', 'about_page')->orWhereNull('page_name');
+            })
+            ->where('section_name', 'journey')
+            ->get()
+            ->keyBy('section_item_name');
+
+        $title = $items['journey_title']->section_content ?? 'Our Journey';
+        $subtitle = $items['journey_subtitle']->section_content ?? 'Four decades of excellence in powering Bangladesh\'s development';
+
+        $milestones = [];
+        for ($i = 1; $i <= 6; $i++) {
+            $milestoneKey = 'journey_milestone' . $i;
+            if (isset($items[$milestoneKey]) && $items[$milestoneKey]->section_content) {
+                $milestoneData = json_decode($items[$milestoneKey]->section_content, true);
+                if ($milestoneData && is_array($milestoneData)) {
+                    $milestones[] = [
+                        'id' => $i,
+                        'year' => $milestoneData['year'] ?? '',
+                        'title' => $milestoneData['title'] ?? '',
+                        'description' => $milestoneData['description'] ?? '',
+                        'order' => $milestoneData['order'] ?? $i
+                    ];
+                }
+            }
+        }
+
+        if (empty($milestones)) {
+            $milestones = [
+                ['id' => 1, 'year' => '1980', 'title' => 'Foundation', 'description' => 'Influx Group established as a small electrical contractor in Dhaka', 'order' => 1],
+                ['id' => 2, 'year' => '1995', 'title' => 'Expansion', 'description' => 'Entered power transmission and distribution sector', 'order' => 2],
+                ['id' => 3, 'year' => '2005', 'title' => 'Manufacturing', 'description' => 'Started manufacturing transformers and switchgear', 'order' => 3],
+                ['id' => 4, 'year' => '2015', 'title' => 'Renewables', 'description' => 'Diversified into solar and wind energy solutions', 'order' => 4],
+                ['id' => 5, 'year' => '2020', 'title' => 'EPC Leadership', 'description' => 'Became leading EPC contractor for mega projects', 'order' => 5],
+                ['id' => 6, 'year' => '2026', 'title' => 'Regional Hub', 'description' => 'Expanded operations across South Asia', 'order' => 6]
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'title' => $title,
+                'subtitle' => $subtitle,
+                'milestones' => collect($milestones)->sortBy('order')->values()
+            ]
+        ]);
+    }
+
+    public function getAboutCoreValues()
+    {
+        $items = ContentManagement::where(function ($q) {
+                $q->where('page_name', 'about_page')->orWhereNull('page_name');
+            })
+            ->where('section_name', 'core_values')
+            ->get()
+            ->keyBy('section_item_name');
+
+        $title = $items['core_values_title']->section_content ?? 'Core Values';
+        $subtitle = $items['core_values_subtitle']->section_content ?? 'The principles that guide everything we do';
+
+        $values = [];
+        $i = 1;
+        while (isset($items["core_value_{$i}"]) && $items["core_value_{$i}"]->section_content) {
+            $jsonData = json_decode($items["core_value_{$i}"]->section_content, true);
+            if ($jsonData && isset($jsonData['title'])) {
+                $values[] = [
+                    'id' => $i,
+                    'title' => $jsonData['title'] ?? '',
+                    'description' => $jsonData['description'] ?? '',
+                    'icon' => $jsonData['icon'] ?? '',
+                    'order' => $jsonData['order'] ?? $i
+                ];
+            }
+            $i++;
+        }
+
+        if (empty($values)) {
+            $values = [
+                ['id' => 1, 'title' => 'Quality Excellence', 'description' => 'Uncompromising commitment to quality across all engineering solutions.', 'icon' => 'ShieldCheck', 'order' => 1],
+                ['id' => 2, 'title' => 'Innovation', 'description' => 'Pioneering modern technology to deliver efficient power infrastructure.', 'icon' => 'Award', 'order' => 2],
+                ['id' => 3, 'title' => 'Integrity', 'description' => 'Building trust through honest relationships and ethical business practices.', 'icon' => 'Users', 'order' => 3],
+                ['id' => 4, 'title' => 'Sustainability', 'description' => 'Driving green energy adoption for a cleaner environment.', 'icon' => 'TrendingUp', 'order' => 4]
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'title' => $title,
+                'subtitle' => $subtitle,
+                'values' => collect($values)->sortBy('order')->values()
+            ]
+        ]);
+    }
+
+    public function getAboutCertifications()
+    {
+        $items = ContentManagement::where(function ($q) {
+                $q->where('page_name', 'about_page')->orWhereNull('page_name');
+            })
+            ->where('section_name', 'certifications_section')
+            ->get()
+            ->keyBy('section_item_name');
+
+        $title = $items['certifications_title']->section_content ?? 'Certifications & Standards';
+        $subtitle = $items['certifications_subtitle']->section_content ?? 'Internationally recognized certifications ensuring quality and safety';
+        $list = json_decode($items['certifications_list']->section_content ?? '[]', true) ?: [
+            'ISO 9001:2015',
+            'ISO 14001:2015',
+            'ISO 45001:2018',
+            'IEC 60076',
+            'IEEE Standards',
+            'BPDB Approved'
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'title' => $title,
+                'subtitle' => $subtitle,
+                'list' => $list
+            ]
+        ]);
+    }
+
+    public function getAboutCareerCta()
+    {
+        $items = ContentManagement::where(function ($q) {
+                $q->where('page_name', 'about_page')->orWhereNull('page_name');
+            })
+            ->where('section_name', 'career_cta_section')
+            ->get()
+            ->keyBy('section_item_name');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'title' => $items['career_cta_title']->section_content ?? 'Join Our Mission',
+                'description' => $items['career_cta_description']->section_content ?? 'Be part of Bangladesh\'s engineering excellence story',
+                'button_text' => $items['career_cta_button_text']->section_content ?? 'Career Opportunities',
+                'button_link' => $items['career_cta_button_link']->section_content ?? '/contact'
+            ]
+        ]);
+    }
 }

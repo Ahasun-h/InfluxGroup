@@ -168,7 +168,7 @@
             </div>
         </div>
 
-        <!-- Live Preview Section -->
+        <!-- Live preview Section -->
         <div class="glass-card p-8">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">
@@ -190,7 +190,7 @@
                 </div>
             </div>
 
-            <!-- Brand Statement Preview -->
+            <!-- Brand Statement preview -->
             <section class="py-12 md:py-20 bg-white text-industrial-dark rounded-xl border border-gray-200 dark:border-surface-600 overflow-hidden">
                 <div class="max-w-7xl mx-auto px-6">
                     <div class="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
@@ -313,7 +313,7 @@
     </div>
 
     <!-- Hidden form for field updates -->
-    <form id="brand-form" action="{{ route('admin.brand-statements.update') }}" method="POST" class="hidden">
+    <form id="brand-form" action="{{ route('admin.brand-statements.update') }}" method="POST" enctype="multipart/form-data" class="hidden">
         @csrf
         @method('PUT')
         <input type="hidden" name="title" value="{{ $getBrandContent($brandItems, 'brand_statements_title', '') }}">
@@ -362,7 +362,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
                         </button>
-                        <input type="file" id="image-upload" accept="image/*">
+                        <input type="file" id="image-upload" name="brand_image_dropify" accept="image/*">
                         <input type="hidden" id="modal-image-url" value="{{ $getBrandContent($brandItems, 'brand_statements_image', '') }}">
                     </div>
                 </div>
@@ -428,9 +428,8 @@
                     // Get current element references
                     const imagePreview = document.getElementById('image-preview');
                     const imageDropzone = document.getElementById('image-dropzone');
-                    const modalImageUrl = document.getElementById('modal-image-url');
 
-                    if (!imagePreview || !imageDropzone || !modalImageUrl) {
+                    if (!imagePreview || !imageDropzone) {
                         console.warn('Image dropzone elements not found');
                         return;
                     }
@@ -450,21 +449,14 @@
 
                     console.log('✓ File selected:', file.name, file.type, file.size);
 
-                    // Convert to base64
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const base64Url = e.target.result;
-                        imagePreview.src = base64Url;
-                        imageDropzone.classList.add('has-image');
-                        modalImageUrl.value = base64Url;
-                        console.log('✓ Image converted to base64:', base64Url.substring(0, 50) + '...');
-                        console.log('✓ Modal image URL input value set');
-                    };
-                    reader.onerror = function(e) {
-                        console.error('✗ Failed to convert image:', e);
-                        alert('Failed to process image. Please try again.');
-                    };
-                    reader.readAsDataURL(file);
+                    // Create object URL for preview (more efficient than base64)
+                    const objectUrl = URL.createObjectURL(file);
+                    imagePreview.src = objectUrl;
+                    imageDropzone.classList.add('has-image');
+                    console.log('✓ Image preview set using object URL');
+
+                    // Clean up previous object URLs to prevent memory leaks
+                    imagePreview.dataset.objectUrl = objectUrl;
                 }
 
                 // Event listeners for image dropzone
@@ -526,6 +518,11 @@
                         removeImageBtn.addEventListener('click', function(e) {
                             e.preventDefault();
                             e.stopPropagation();
+                            // Revoke object URL to prevent memory leaks
+                            if (imagePreview.dataset.objectUrl) {
+                                URL.revokeObjectURL(imagePreview.dataset.objectUrl);
+                                delete imagePreview.dataset.objectUrl;
+                            }
                             imagePreview.src = '';
                             imageDropzone.classList.remove('has-image');
                             modalImageUrl.value = '';
@@ -586,6 +583,7 @@
                     if (valueElement) valueElement.textContent = value;
                     if (labelElement) labelElement.textContent = label;
 
+                    // Update form inputs BEFORE creating FormData
                     const valueInput = document.querySelector(`input[name="stat${statId}_value"]`);
                     const labelInput = document.querySelector(`input[name="stat${statId}_label"]`);
 
@@ -593,7 +591,33 @@
                     if (labelInput) labelInput.value = label;
 
                     window.closeStatModal();
-                    document.getElementById('brand-form').submit();
+
+                    // Create FormData AFTER updating form inputs
+                    const form = document.getElementById('brand-form');
+                    const formData = new FormData(form);
+
+                    console.log('=== Submitting stat update via AJAX ===');
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('✓ Response:', data);
+                        if (data.success) {
+                            // Show success message (optional, can use a toast instead)
+                            console.log('✓ Stat saved successfully');
+                        } else {
+                            alert('Error: ' + (data.message || 'Something went wrong'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('✗ Error:', error);
+                        alert('Error: Failed to save. Please try again.');
+                    });
                 };
 
                 window.editField = function(fieldName) {
@@ -680,6 +704,11 @@
                             imageDropzone.classList.remove('has-image');
                         }
                         if (imagePreview) {
+                            // Revoke object URL to prevent memory leaks
+                            if (imagePreview.dataset.objectUrl) {
+                                URL.revokeObjectURL(imagePreview.dataset.objectUrl);
+                                delete imagePreview.dataset.objectUrl;
+                            }
                             imagePreview.src = '';
                         }
                         if (imageUpload) {
@@ -696,18 +725,27 @@
                     const fieldName = document.getElementById('current-field-name').value;
                     console.log('Field name:', fieldName);
 
+                    const form = document.getElementById('brand-form');
                     let value;
 
                     if (fieldName === 'image_url') {
+                        // Get the file input
+                        const fileInput = document.getElementById('image-upload');
                         const modalInput = document.getElementById('modal-image-url');
-                        console.log('Modal image input found:', !!modalInput);
-                        value = modalInput ? modalInput.value : '';
-                        console.log('Raw modal value:', value ? value.substring(0, 50) + '...' : 'empty');
-                        console.log('Modal value length:', value ? value.length : 0);
+                        const hasNewFile = fileInput && fileInput.files.length > 0;
 
-                        if (!value || value.trim() === '') {
+                        console.log('Has new file:', hasNewFile);
+
+                        if (!hasNewFile) {
                             alert('Please select an image first.');
                             return;
+                        }
+
+                        // Update preview
+                        const brandImage = document.getElementById('brand-image');
+                        if (brandImage && modalInput && modalInput.value) {
+                            brandImage.src = modalInput.value;
+                            console.log('✓ Updated brand image src');
                         }
                     } else {
                         value = document.getElementById('field-input').value;
@@ -715,50 +753,86 @@
                         if (fieldName === 'overlay_text' && !value.startsWith('"')) {
                             value = '"' + value + '"';
                         }
-                    }
 
-                    console.log('Final value to save:', value ? value.substring(0, 50) + '...' : 'empty');
-
-                    // Update the preview
-                    if (fieldName === 'image_url') {
-                        const brandImage = document.getElementById('brand-image');
-                        if (brandImage) {
-                            brandImage.src = value;
-                            console.log('✓ Updated brand image src');
-                        }
-                    } else {
+                        // Update the preview element
                         const element = document.querySelector(`[data-field="${fieldName}"]`);
                         if (element) {
                             element.textContent = value;
                             console.log('✓ Updated preview element');
                         }
-                    }
 
-                    // CRITICAL: Update the form input
-                    console.log('=== Updating form input ===');
-                    const formInput = document.querySelector(`#brand-form input[name="${fieldName}"]`);
-                    console.log('Form input found:', !!formInput);
-                    console.log('Form input before update:', formInput ? formInput.value.substring(0, 50) + '...' : 'not found');
-
-                    if (formInput) {
-                        formInput.value = value;
-                        console.log('✓ Form input updated:', formInput.value.substring(0, 50) + '...');
-                    } else {
-                        console.error('❌ Form input not found for:', fieldName);
+                        // Update form input BEFORE creating FormData
+                        const formInput = document.querySelector(`#brand-form input[name="${fieldName}"]`);
+                        if (formInput) {
+                            formInput.value = value;
+                            console.log('✓ Form input updated');
+                        } else {
+                            console.error('❌ Form input not found for:', fieldName);
+                        }
                     }
 
                     window.closeFieldModal();
 
-                    // Log all form data before submission
-                    console.log('=== Final form data ===');
-                    const form = document.getElementById('brand-form');
+                    // Create FormData AFTER updating form inputs
                     const formData = new FormData(form);
-                    for (const [key, val] of formData.entries()) {
-                        console.log(key + ':', val ? val.substring(0, 100) + '...' : 'empty');
+
+                    // If it's an image upload, append the file
+                    if (fieldName === 'image_url') {
+                        const fileInput = document.getElementById('image-upload');
+                        if (fileInput && fileInput.files.length > 0) {
+                            formData.append('brand_image_dropify', fileInput.files[0]);
+                            console.log('✓ File appended to formData');
+                        }
                     }
 
-                    console.log('=== Submitting form ===');
-                    form.submit();
+                    // Log form data
+                    console.log('=== Submitting form data ===');
+                    for (const [key, val] of formData.entries()) {
+                        if (val instanceof File) {
+                            console.log(key + ': [File]', val.name, val.size);
+                        } else {
+                            console.log(key + ':', val ? val.toString().substring(0, 100) + '...' : 'empty');
+                        }
+                    }
+
+                    // Submit via AJAX
+                    console.log('=== Sending AJAX request ===');
+                    console.log('Form action:', form.action);
+                    console.log('FormData entries:');
+                    for (const [key, val] of formData.entries()) {
+                        if (val instanceof File) {
+                            console.log('  ' + key + ': [File]', val.name, val.size, val.type);
+                        } else {
+                            console.log('  ' + key + ':', val);
+                        }
+                    }
+
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        console.log('Response ok:', response.ok);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('✓ Response:', data);
+                        if (data.success) {
+                            alert(data.message || 'Saved successfully!');
+                            // Optionally reload the page to show updated data
+                            // location.reload();
+                        } else {
+                            alert('Error: ' + (data.message || 'Something went wrong'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('✗ Error:', error);
+                        alert('Error: Failed to save. Please try again.');
+                    });
                 };
 
                 // Modal click handlers

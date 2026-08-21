@@ -2,6 +2,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { projectService, companyService, heroService, brandService, missionVisionService, journeyService, coreValuesService, contactCtaService, testimonialService, partnerService, serviceCategoriesService, productService, solutionService, serviceService } from '../services/content'
 import { API_CONFIG } from '../config/api'
+import HeroSectionComponent from '@/components/sections/HeroSection.vue'
+import BrandStatementSection from '@/components/sections/BrandStatementSection.vue'
+import MissionVisionSection from '@/components/sections/MissionVisionSection.vue'
+import CoreValuesSection from '@/components/sections/CoreValuesSection.vue'
+import PartnersSection from '@/components/sections/PartnersSection.vue'
+import ContactCtaSection from '@/components/sections/ContactCtaSection.vue'
 import {
   Zap,
   Settings,
@@ -40,7 +46,7 @@ const productCategories = computed(() => {
   if (heroData.value?.categories && heroData.value.categories.length > 0) {
     return heroData.value.categories.map(cat => {
       // Check if icon contains SVG HTML
-      if (cat.icon && cat.icon.includes('<svg')) {
+      if (typeof cat.icon === 'string' && cat.icon.includes('<svg')) {
         return {
           name: cat.name,
           icon: cat.icon, // Store SVG HTML directly
@@ -58,12 +64,11 @@ const productCategories = computed(() => {
     })
   }
 
-  // Default categories
+  // Default categories - now 3 items
   return [
     { name: 'Transformers', icon: Zap, isSvg: false, count: '45+' },
     { name: 'Switchgear', icon: Settings, isSvg: false, count: '120+' },
-    { name: 'Renewables', icon: Wind, isSvg: false, count: '12GW' },
-    { name: 'Automation', icon: Cpu, isSvg: false, count: '80+' }
+    { name: 'Renewables', icon: Wind, isSvg: false, count: '12GW' }
   ]
 })
 
@@ -160,7 +165,12 @@ const featuredProjects = ref([])
 const getImageUrl = (path) => {
   if (!path) return 'https://images.unsplash.com/photo-1466611653911-95282fc3656b?auto=format&fit=crop&q=80&w=1200'
   if (path.startsWith('http')) return path
-  return `${API_CONFIG.baseURL.replace('/api', '')}${path}`
+  // Handle emoji/logos that are just text
+  if (isEmoji(path)) return path
+  // Fix incorrect storage paths by removing /app/public if present and using new storage route
+  let cleanPath = path.replace('/storage/app/public/', '/storage-files/')
+  cleanPath = cleanPath.replace('/storage/', '/storage-files/')
+  return `${API_CONFIG.baseURL.replace('/api', '')}${cleanPath}`
 }
 
 const isEmoji = (str) => {
@@ -168,6 +178,21 @@ const isEmoji = (str) => {
   // Simple emoji detection - check if the string is short and contains emoji-like characters
   const hasEmoji = /[\u2600-\u26FF\u2700-\u27BF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDEFF]/.test(str)
   return str.length <= 10 && hasEmoji
+}
+
+const handleImageError = (event, partner) => {
+  console.warn(`Partner logo failed to load: ${partner.logo}`)
+  // Replace broken image with company name as fallback
+  const imgElement = event.target
+  const container = imgElement.parentElement
+  if (container && imgElement) {
+    // Create a text fallback
+    const textFallback = document.createElement('div')
+    textFallback.className = 'text-2xl md:text-3xl mb-3 group-hover:scale-110 transition-transform font-bold text-industrial-blue'
+    textFallback.textContent = partner.name.charAt(0) + (partner.name.split(' ').length > 1 ? partner.name.split(' ').pop().charAt(0) : '')
+    imgElement.style.display = 'none'
+    container.insertBefore(textFallback, imgElement)
+  }
 }
 
 const fetchFeaturedProjects = async () => {
@@ -781,58 +806,6 @@ const timeline = computed(() => {
   ]
 })
 
-// Core Values from admin panel - now using SVG data
-const coreValues = computed(() => {
-  // Use dedicated API data if available
-  if (coreValuesData.value?.values) {
-    console.log('Using core values API data:', coreValuesData.value)
-    const cv = coreValuesData.value
-    return {
-      title: cv.title || 'Core Values',
-      subtitle: cv.subtitle || 'The principles that guide everything we do',
-      list: cv.values.map(v => ({
-        title: v.title || '',
-        description: v.description || '',
-        // If icon contains SVG, use it as component, otherwise map icon names
-        icon: v.icon?.includes('<svg') ? {
-          template: v.icon
-        } : (iconMap[v.icon] || ShieldCheck)
-      }))
-    }
-  }
-
-  // Fallback to homepageData for backwards compatibility
-  if (homepageData.value?.core_values) {
-    console.log('Using homepageData core values as fallback:', homepageData.value.core_values)
-    const cv = homepageData.value.core_values
-    return {
-      title: cv.title || 'Core Values',
-      subtitle: cv.subtitle || 'The principles that guide everything we do',
-      list: cv.list.map(v => ({
-        title: v.title || '',
-        description: v.description || '',
-        // If icon contains SVG, use it as component, otherwise map icon names
-        icon: v.icon?.includes('<svg') ? {
-          template: v.icon
-        } : (iconMap[v.icon] || ShieldCheck)
-      }))
-    }
-  }
-
-  // Default values if no data
-  console.log('Using default core values')
-  return {
-    title: 'Core Values',
-    subtitle: 'The principles that guide everything we do',
-    list: [
-      { icon: ShieldCheck, title: 'Safety First', description: 'Zero-compromise approach to workplace and operational safety' },
-      { icon: Award, title: 'Quality Excellence', description: 'ISO 9001:2015 certified processes and international standards' },
-      { icon: Users, title: 'Customer Focus', description: 'Dedicated to delivering beyond client expectations' },
-      { icon: TrendingUp, title: 'Innovation Driven', description: 'Continuous investment in R&D and cutting-edge technology' }
-    ]
-  }
-})
-
 // Certifications from About page
 const certifications = [
   'ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018',
@@ -855,7 +828,7 @@ const productCategoryList = computed(() => {
 
       if (category.icon) {
         // If icon contains SVG HTML, use it as template
-        if (category.icon.includes('<svg')) {
+        if (typeof category.icon === 'string' && category.icon.includes('<svg')) {
           categories.push({
             id: category.id,
             name: category.name,
@@ -946,7 +919,7 @@ const mainServices = computed(() => {
     return latestServicesData.value.map(service => {
       // Map icon if it's provided, otherwise use default icon
       let iconComponent = Cog
-      if (service.icon && service.icon.includes('<svg')) {
+      if (typeof service.icon === 'string' && service.icon.includes('<svg')) {
         iconComponent = { template: service.icon }
       } else if (service.icon && iconMap[service.icon]) {
         iconComponent = iconMap[service.icon]
@@ -996,7 +969,7 @@ const keySolutions = computed(() => {
     return latestSolutionsData.value.map(solution => {
       // Map icon if it's provided, otherwise use default icon
       let iconComponent = Zap
-      if (solution.icon && solution.icon.includes('<svg')) {
+      if (typeof solution.icon === 'string' && solution.icon.includes('<svg')) {
         iconComponent = { template: solution.icon }
       } else if (solution.icon && iconMap[solution.icon]) {
         iconComponent = iconMap[solution.icon]
@@ -1043,7 +1016,7 @@ const industries = computed(() => {
       let iconComponent = Zap
       if (category.icon) {
         // If icon contains SVG HTML, store it as template
-        if (category.icon.includes('<svg')) {
+        if (typeof category.icon === 'string' && category.icon.includes('<svg')) {
           return {
             name: category.name,
             icon: { template: category.icon },
@@ -1085,44 +1058,6 @@ const testimonials = computed(() => {
 })
 
 // Partners/Clients - now using dynamic data
-const partners = computed(() => {
-  // Use dedicated API data if available
-  if (partnersData.value?.list) {
-    console.log('Using partners API data:', partnersData.value)
-    return {
-      title: partnersData.value.title || 'Trusted by Industry Leaders',
-      subtitle: partnersData.value.subtitle || 'Proud partner to government agencies, multinational corporations, and leading enterprises',
-      list: partnersData.value.list
-    }
-  }
-
-  // Fallback to homepageData for backwards compatibility
-  if (homepageData.value?.partners?.list) {
-    console.log('Using homepageData partners as fallback:', homepageData.value.partners)
-    const p = homepageData.value.partners
-    return {
-      title: p.title || 'Trusted by Industry Leaders',
-      subtitle: p.subtitle || 'Proud partner to government agencies, multinational corporations, and leading enterprises',
-      list: p.list
-    }
-  }
-
-  // Default values if no data
-  console.log('Using default partners values')
-  return {
-    title: 'Trusted by Industry Leaders',
-    subtitle: 'Proud partner to government agencies, multinational corporations, and leading enterprises',
-    list: [
-      { name: 'BPDB', logo: '🏭' },
-      { name: 'ADB', logo: '🏦' },
-      { name: 'World Bank', logo: '🌐' },
-      { name: 'BERC', logo: '⚡' },
-      { name: 'IEC', logo: '🔌' },
-      { name: 'IEEE', logo: '📡' }
-    ]
-  }
-})
-
 const contactCta = computed(() => {
   // Use dedicated API data if available
   if (contactCtaData.value?.title) {
@@ -1161,136 +1096,21 @@ const contactCta = computed(() => {
 <template>
   <div class="min-h-screen">
     <!-- Hero Section -->
-    <section class="relative min-h-screen flex items-center pt-24 md:pt-20 pb-32 md:pb-40 overflow-hidden">
-      <!-- Background Image -->
-      <div class="absolute inset-0 z-0">
-        <img
-          :src="getImageUrl(heroData?.background_image || heroData?.seo_attributes?.src || homepageData?.hero?.background_image || '/hero.png')"
-          class="w-full h-full object-cover scale-105"
-          alt="Power Infrastructure"
-        />
-        <div class="absolute inset-0 bg-gradient-to-r from-industrial-dark via-industrial-dark/80 to-transparent"></div>
-        <div class="absolute inset-0 bg-industrial-dark/40"></div>
-      </div>
-
-      <!-- Content -->
-      <div class="relative z-10 max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
-        <div v-motion :initial="{ opacity: 0, x: -50 }" :enter="{ opacity: 1, x: 0 }">
-          <div class="flex items-center gap-3 mb-6 md:mb-8">
-            <div class="h-px w-8 md:w-12 bg-industrial-blue"></div>
-            <span class="text-industrial-blue font-black uppercase tracking-[0.3em] md:tracking-[0.5em] text-[10px] md:text-xs">
-              {{ heroData?.badge || homepageData?.hero?.subtitle || 'Leaders in Energy' }}
-            </span>
-          </div>
-          <h1 class="text-3xl sm:text-4xl md:text-[4em] font-display font-black uppercase italic leading-[1.1] mb-8 text-white drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]">
-            {{ heroData?.title || homepageData?.hero?.title || 'POWERING BANGLADESH' }}
-          </h1>
-          <p class="text-sm md:text-base text-slate-200 max-w-lg mb-8 md:mb-10 leading-relaxed font-medium">
-            {{ heroData?.description || homepageData?.hero?.description || 'From utility-scale power plants to smart grid automation, Influx Group delivers the technical precision that moves nations.' }}
-          </p>
-          <div class="flex flex-wrap gap-4 md:gap-5">
-            <a :href="heroData?.primary_cta?.link || heroData?.cta_link || homepageData?.hero?.cta_link || '/projects'" class="bg-industrial-blue text-white px-6 md:px-10 py-3 md:py-5 rounded-sm font-black uppercase tracking-widest text-[10px] md:text-xs flex items-center gap-3 hover:bg-industrial-red transition-all shadow-2xl hover:scale-105 active:scale-95">
-              {{ heroData?.primary_cta?.text || heroData?.cta_text || homepageData?.hero?.cta_text || 'EXPLORE CATALOG' }} <ChevronRight class="w-4 h-4" />
-            </a>
-            <a :href="heroData?.secondary_cta?.link || '/about'" class="bg-white/5 border-2 border-white/20 text-white px-6 md:px-10 py-3 md:py-5 rounded-sm font-black uppercase tracking-widest text-[10px] md:text-xs backdrop-blur-md hover:bg-white/20 transition-all hover:border-white">
-              {{ heroData?.secondary_cta?.text || 'CORPORATE PROFILE' }}
-            </a>
-          </div>
-        </div>
-
-        <!-- Floating Cards -->
-        <div
-          class="hidden lg:grid grid-cols-2 gap-4 relative z-10"
-          v-motion
-          :initial="{ opacity: 0, scale: 0.8 }"
-          :enter="{ opacity: 1, scale: 1 }"
-          :delay="400"
-        >
-          <div class="glass-panel p-6 rounded-xl hover:-translate-y-2 transition-all duration-500 cursor-pointer group flex items-center gap-4">
-            <div class="w-16 h-16 flex-shrink-0 flex items-center justify-center">
-              <Settings class="w-12 h-12 text-industrial-blue group-hover:rotate-90 transition-transform duration-700" />
-            </div>
-            <div>
-              <h3 class="font-bold mb-1">Turnkey EPC</h3>
-              <p class="text-[10px] text-slate-400">End-to-end project management.</p>
-            </div>
-          </div>
-          <div class="glass-panel p-6 rounded-xl hover:-translate-y-2 transition-all duration-500 cursor-pointer group flex items-center gap-4">
-            <div class="w-16 h-16 flex-shrink-0 flex items-center justify-center">
-              <ShieldCheck class="w-12 h-12 text-industrial-blue group-hover:scale-110 transition-transform" />
-            </div>
-            <div>
-              <h3 class="font-bold mb-1">Smart Grid</h3>
-              <p class="text-[10px] text-slate-400">Class 5 risk mitigation integrated.</p>
-            </div>
-          </div>
-          <div class="col-span-2 glass-panel p-6 rounded-xl flex items-center justify-between hover:bg-industrial-blue/10 transition-colors">
-            <div class="flex items-center gap-4">
-              <div class="w-16 h-16 flex-shrink-0 flex items-center justify-center">
-                <Activity class="w-12 h-12 text-industrial-blue animate-pulse" />
-              </div>
-              <div>
-                <h3 class="text-2xl font-display font-black flex items-center gap-2">
-                  ISO <span class="text-[10px] text-industrial-blue bg-industrial-blue/10 px-2 py-0.5 rounded uppercase">9001:2015</span>
-                </h3>
-                <p class="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Certified Compliance</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Category Bar -->
-      <div class="absolute bottom-0 w-full bg-white/5 backdrop-blur-3xl border-t border-white/10 overflow-x-auto">
-        <div class="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 min-w-[600px] md:min-w-0">
-          <div v-for="cat in productCategories" :key="cat.name" class="py-6 md:py-8 px-0 group cursor-pointer hover:bg-white/5 transition-colors">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 flex items-center justify-center">
-                <!-- Render SVG if icon contains HTML, otherwise use component -->
-                <div v-if="cat.isSvg" v-html="cat.icon" class="w-6 h-6 md:w-8 md:h-8 text-industrial-blue group-hover:text-industrial-red transition-colors"></div>
-                <component v-else :is="cat.icon" class="w-6 h-6 md:w-8 md:h-8 text-industrial-blue group-hover:text-industrial-red transition-colors" />
-              </div>
-              <div>
-                <div class="text-[8px] md:text-[10px] text-slate-500 font-black uppercase tracking-widest">{{ cat.count }} Models</div>
-                <div class="font-display font-black uppercase text-base md:text-xl group-hover:text-industrial-blue transition-colors leading-tight">{{ cat.name }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <HeroSectionComponent
+      :hero-data="heroData"
+      :homepage-data="homepageData"
+      :product-categories="productCategories"
+      :api-config="API_CONFIG"
+    />
 
     <!-- Brand Statement / Trust Section -->
-    <section class="py-20 md:py-32 bg-white text-industrial-dark">
-      <div class="max-w-7xl mx-auto px-6">
-        <div class="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
-          <div v-motion-slide-visible-left>
-             <h2 class="text-4xl md:text-5xl font-display font-black uppercase leading-[0.9] mb-8 text-industrial-dark">
-               <span v-html="formatBrandTitle(brandStatements?.title || homepageData?.brand_statement?.title || 'ESTABLISHED AUTHORITY IN HEAVY ENGINEERING')"></span>
-             </h2>
-             <p class="text-slate-600 text-base md:text-lg leading-relaxed mb-8">
-               {{ brandStatements?.description || homepageData?.brand_statement?.description || 'Following the legacy of JRC and Energypac, Influx Group has evolved into a multi-sector engineering conglomerate. We specialize in EPC contracts, high-capacity switchgears, and power generation maintenance.' }}
-             </p>
-             <div class="grid grid-cols-2 gap-8 md:gap-12">
-               <div v-for="stat in stats" :key="stat.label" class="border-l-4 border-industrial-blue pl-4 md:pl-6 py-2">
-                 <div class="text-3xl md:text-4xl font-display font-black text-industrial-blue">{{ stat.value }}</div>
-                 <div class="text-[10px] font-black uppercase tracking-widest text-slate-500">{{ stat.label }}</div>
-               </div>
-             </div>
-          </div>
-          <div class="relative group overflow-hidden rounded-sm h-[400px] md:h-[500px]" v-motion-slide-visible-right>
-            <img :src="getImageUrl(brandStatements?.image || homepageData?.brand_statement?.image_url)" class="w-full h-full object-cover transition-transform duration-[3s] group-hover:scale-110" />
-            <div class="absolute inset-0 bg-industrial-blue/10 mix-blend-multiply"></div>
-            <div class="absolute bottom-6 md:bottom-10 left-6 md:left-10 p-6 md:p-8 bg-industrial-blue text-white shadow-2xl max-w-[200px] md:max-w-xs transition-all opacity-0 md:opacity-100 group-hover:opacity-100">
-               <div class="text-[10px] font-black uppercase tracking-[0.3em] mb-2 opacity-70">{{ brandStatements?.overlay_title || homepageData?.brand_statement?.overlay_title || 'Core Reliability' }}</div>
-               <div class="text-xl md:text-2xl font-display font-bold italic leading-tight">"{{ brandStatements?.overlay_text || homepageData?.brand_statement?.overlay_text || 'Zero Downtime Operation Protocols' }}"</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <BrandStatementSection
+      :brand-statements="brandStatements"
+      :homepage-data="homepageData"
+      :highlighted-word="homepageData?.brand_statement?.highlighted_word || 'AUTHORITY'"
+    />
 
-    <!-- Projects Preview -->
+    <!-- Projects preview -->
     <section class="py-20 md:py-32 bg-industrial-dark text-white relative overflow-hidden">
       <div class="max-w-7xl mx-auto px-6 relative z-10">
         <div class="grid lg:grid-cols-12 gap-12 md:gap-16 items-center mb-12">
@@ -1352,95 +1172,18 @@ const contactCta = computed(() => {
       </div>
     </section>
 
-    <!-- Mission & Vision Section (from About page) -->
-    <section class="py-20 md:py-32 bg-white text-industrial-dark">
-      <div class="max-w-7xl mx-auto px-6">
-        <div class="grid md:grid-cols-2 gap-16">
-          <div v-for="(item, index) in missionVision" :key="index" v-motion-slide-visible :class="index % 2 === 0 ? 'left' : 'right'">
-            <div class="flex items-center gap-3 mb-6">
-              <component :is="item.icon" class="w-8 h-8 text-industrial-blue" />
-              <h2 class="text-3xl md:text-4xl font-display font-black uppercase italic text-industrial-dark">{{ item.title }}</h2>
-            </div>
-            <p class="text-base md:text-lg text-slate-600 leading-relaxed mb-6">
-              {{ item.description }}
-            </p>
-            <ul class="space-y-4">
-              <li v-for="(point, idx) in item.points" :key="idx" class="flex items-start gap-3">
-                <CheckCircle class="w-6 h-6 text-industrial-blue flex-shrink-0 mt-1" />
-                <span class="text-slate-700">{{ point }}</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
+    <!-- Mission & Vision Section -->
+    <MissionVisionSection
+      :mission-vision-data="missionVisionData"
+      :homepage-data="homepageData"
+    />
 
-    <!-- Company Timeline (from About page - abbreviated) -->
-    <section class="py-20 md:py-32 bg-industrial-light">
-      <div class="max-w-7xl mx-auto px-6">
-        <div class="text-center mb-16" v-motion-slide-visible-bottom>
-          <h2 class="text-4xl md:text-5xl font-display font-black uppercase italic mb-6 text-industrial-dark">
-            {{ journeyData?.title?.split(' ')[0] || homepageData?.journey?.title?.split(' ')[0] || 'Our' }} <span class="text-industrial-blue">{{ journeyData?.title?.split(' ').slice(1).join(' ') || homepageData?.journey?.title?.split(' ').slice(1).join(' ') || 'Journey' }}</span>
-          </h2>
-          <p class="text-slate-600 text-lg max-w-2xl mx-auto">
-            {{ journeyData?.subtitle || homepageData?.journey?.subtitle || 'Four decades of excellence in powering Bangladesh\'s development' }}
-          </p>
-        </div>
-
-        <div class="relative">
-          <div class="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-industrial-blue/20 hidden md:block"></div>
-          <div class="space-y-12 md:space-y-16">
-            <div
-              v-for="(item, index) in timeline"
-              :key="index"
-              class="relative flex items-center"
-              :class="index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'"
-              v-motion-slide-visible-bottom
-              :delay="index * 100"
-            >
-              <div class="w-full md:w-5/12" :class="index % 2 === 0 ? 'md:pr-12' : 'md:pl-12'">
-                <div class="bg-white p-6 md:p-8 rounded-lg shadow-xl hover:shadow-2xl transition-shadow">
-                  <div class="text-industrial-blue font-black text-xl md:text-2xl mb-2">{{ item.year }}</div>
-                  <h3 class="text-lg md:text-xl font-bold mb-3 text-industrial-dark">{{ item.title }}</h3>
-                  <p class="text-slate-600 text-sm md:text-base">{{ item.description }}</p>
-                </div>
-              </div>
-              <div class="hidden md:block absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-industrial-blue rounded-full border-4 border-white shadow-lg"></div>
-              <div class="w-0 md:w-5/12"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Core Values (from About page) -->
-    <section class="py-20 md:py-32 bg-industrial-dark text-white">
-      <div class="max-w-7xl mx-auto px-6">
-        <div class="text-center mb-16" v-motion-slide-visible-bottom>
-          <h2 class="text-4xl md:text-5xl font-display font-black uppercase italic mb-6 text-white" v-html="formatBrandTitle(coreValues.title)">
-          </h2>
-          <p class="text-slate-400 text-lg max-w-2xl mx-auto">
-            {{ coreValues.subtitle }}
-          </p>
-        </div>
-
-        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          <div
-            v-for="(value, index) in coreValues.list"
-            :key="index"
-            class="glass-panel p-6 md:p-8 rounded-lg hover:bg-industrial-blue/10 transition-colors group"
-            v-motion-slide-visible-bottom
-            :delay="index * 100"
-          >
-            <!-- Icon - SVG template or component -->
-            <div v-if="value.icon?.template" v-html="value.icon.template" class="w-10 h-10 md:w-12 md:h-12 text-industrial-blue mb-4 md:mb-6 group-hover:scale-110 transition-transform"></div>
-            <component v-else :is="value.icon" class="w-10 h-10 md:w-12 md:h-12 text-industrial-blue mb-4 md:mb-6 group-hover:scale-110 transition-transform" />
-            <h3 class="text-lg md:text-xl font-bold mb-3 md:mb-4 text-white">{{ value.title }}</h3>
-            <p class="text-slate-400 text-xs md:text-sm leading-relaxed">{{ value.description }}</p>
-          </div>
-        </div>
-      </div>
-    </section>
+    <!-- Core Values Section -->
+    <CoreValuesSection
+      :core-values-data="coreValuesData"
+      :homepage-data="homepageData"
+      :highlighted-word="'VALUES'"
+    />
 
     <!-- Certifications (from About page) -->
     <section class="py-16 md:py-24 bg-white text-industrial-dark">
@@ -1717,7 +1460,7 @@ const contactCta = computed(() => {
             <div
               v-for="(industry, index) in industries"
               :key="index"
-              class="glass-panel p-4 md:p-6 rounded-lg text-center hover:bg-industrial-blue/10 transition-colors group"
+              class="glass-panel p-4 md:p-6 rounded-lg text-center hover:bg-industrial-blue/10 transition-colors group industries_serve"
               v-motion-slide-visible-bottom
               :delay="index * 100"
             >
@@ -1783,68 +1526,14 @@ const contactCta = computed(() => {
       </div>
     </section>
 
-    <!-- Partners/Clients (new section) -->
-    <section class="py-16 md:py-24 bg-industrial-light">
-      <div class="max-w-7xl mx-auto px-6">
-        <div class="text-center mb-12" v-motion-slide-visible-bottom>
-          <h2 class="text-3xl md:text-4xl font-display font-black uppercase italic mb-6 text-industrial-dark">
-            {{ partners.title || 'Trusted by' }} <span class="text-industrial-blue">Industry Leaders</span>
-          </h2>
-          <p class="text-slate-600 text-base md:text-lg max-w-2xl mx-auto">
-            {{ partners.subtitle || 'Proud partner to government agencies, multinational corporations, and leading enterprises' }}
-          </p>
-        </div>
+    <!-- Partners/Clients Section -->
+    <PartnersSection
+      :partners-data="partnersData"
+      :homepage-data="homepageData"
+    />
 
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 md:gap-8">
-          <div
-            v-for="(partner, index) in partners.list"
-            :key="index"
-            class="bg-white p-6 md:p-8 rounded-lg flex flex-col items-center justify-center shadow-lg hover:shadow-xl transition-all group"
-            v-motion-slide-visible-bottom
-            :delay="index * 100"
-          >
-            <!-- Display emoji logo if it's an emoji -->
-            <div
-              v-if="isEmoji(partner.logo)"
-              class="text-4xl md:text-5xl mb-3 group-hover:scale-110 transition-transform"
-            >
-              {{ partner.logo }}
-            </div>
-            <!-- Display image logo if it's an image URL -->
-            <img
-              v-else
-              :src="getImageUrl(partner.logo)"
-              :alt="partner.name"
-              class="h-12 md:h-16 w-auto object-contain mb-3 group-hover:scale-110 transition-transform"
-            />
-            <div class="font-black uppercase text-xs md:text-sm tracking-wider text-slate-700 group-hover:text-industrial-blue transition-colors">{{ partner.name }}</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Contact CTA (new section) -->
-    <section class="py-20 md:py-32 bg-industrial-blue text-white relative overflow-hidden">
-      <div class="absolute inset-0 bg-gradient-to-r from-industrial-dark/20 to-transparent"></div>
-      <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
-        <div v-motion-slide-visible-bottom>
-          <h2 class="text-4xl md:text-5xl font-display font-black uppercase italic mb-8">
-            {{ contactCta.title }}
-          </h2>
-          <p class="text-lg md:text-xl mb-12 text-industrial-100 max-w-3xl mx-auto">
-            {{ contactCta.description }}
-          </p>
-          <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a :href="contactCta.button_link" class="inline-flex items-center justify-center gap-3 bg-white text-industrial-blue px-8 md:px-12 py-4 md:py-5 rounded-sm font-black uppercase tracking-widest text-xs hover:bg-industrial-dark hover:text-white transition-all shadow-2xl">
-              {{ contactCta.button_text }} <Briefcase class="w-5 h-5" />
-            </a>
-            <a href="/contact" class="inline-flex items-center justify-center gap-3 bg-transparent border-2 border-white text-white px-8 md:px-12 py-4 md:py-5 rounded-sm font-black uppercase tracking-widest text-xs hover:bg-white hover:text-industrial-blue transition-all">
-              Contact Us <Phone class="w-5 h-5" />
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
+    <!-- Contact CTA Section -->
+    <ContactCtaSection :contact-cta="contactCta" />
 
     <!-- Project Modal -->
     <Transition
@@ -1924,10 +1613,20 @@ const contactCta = computed(() => {
 
 <style scoped>
 /* Core values SVG styling */
+:deep(.core-value svg) {
+    width: 65px !important;
+    height: 65px !important;
+}
+
 :deep(.glass-panel svg) {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+:deep(.industries_serve svg){
+    width: 70px;
+    height: 70px;
 }
 
 /* Industries icons SVG styling - make fills white */
