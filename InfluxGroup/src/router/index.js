@@ -182,6 +182,17 @@ const routes = [
         }
       },
       {
+        path: 'certifications',
+        alias: ['certifications', '/preview/certifications', '/preview/certifications-section'],
+        name: 'Certifications',
+        component: () => import('../pages/preview/home/Certifications.vue'),
+        meta: {
+          title: 'Certifications Preview | Influx Group',
+          transition: 'fade',
+          noLayout: true // Bypass MainLayout
+        }
+      },
+      {
         path: 'mission-vision',
         alias: ['mission-and-vision', '/preview/home/mission-vision', '/preview/home/mission-and-vision'],
         name: 'PreviewMissionVision',

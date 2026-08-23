@@ -105,6 +105,9 @@ Route::prefix('cms')->group(function () {
     // Partners
     Route::get('/partners', [ContentController::class, 'getPartners']);
 
+    // Home Page Certifications
+    Route::get('/home-certifications', [ContentController::class, 'getHomeCertifications']);
+
     // Contact CTA
     Route::get('/contact-cta', [ContentController::class, 'getContactCTA']);
 

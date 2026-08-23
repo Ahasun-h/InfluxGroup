@@ -298,6 +298,26 @@ export const partnerService = {
 }
 
 /**
+ * Home Certifications Service
+ */
+export const homeCertificationsService = {
+  /**
+   * Get home page certifications data
+   */
+  async getCertificationsData() {
+    try {
+      console.log('homeCertificationsService: Fetching from', API_ENDPOINTS.HOME_CERTIFICATIONS)
+      const response = await api.get(API_ENDPOINTS.HOME_CERTIFICATIONS)
+      console.log('homeCertificationsService: Response received', response)
+      return response
+    } catch (error) {
+      console.error('homeCertificationsService: Error fetching home certifications data', error)
+      throw error
+    }
+  },
+}
+
+/**
  * Service Categories Service
  */
 export const serviceCategoriesService = {

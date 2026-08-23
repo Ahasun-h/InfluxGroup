@@ -38,6 +38,7 @@ class HomePageController extends Controller
             'coreValues' => $this->loadCoreValues(),
             'journey' => $this->loadJourney(),
             'partners' => $this->loadPartners(),
+            'certifications' => $this->loadCertifications(),
             'testimonials' => $this->loadTestimonials(),
             'contactCta' => $this->loadContactCta(),
             'subscriptionSection' => $this->loadSubscriptionSection(),
@@ -423,6 +424,8 @@ class HomePageController extends Controller
                     return $this->updateCoreValues($request);
                 case 'partners':
                     return $this->updatePartners($request);
+                case 'certifications':
+                    return $this->updateCertifications($request);
                 case 'journey':
                     return $this->updateJourney($request);
                 case 'testimonials':
@@ -1162,11 +1165,27 @@ class HomePageController extends Controller
             }
         }
 
-        // 4. Update partners list
+        // 4. Update partners list and clean up old data
         if ($request->has('partners') && is_array($request->partners)) {
+            // First, get all existing partner items to clean up later
+            $existingPartnerItems = ContentManagement::where('section_name', 'partners')
+                ->where('section_item_name', 'regexp', '^partner_[0-9]+$')
+                ->where(function ($q) {
+                    $q->where('page_name', 'home_page')->orWhereNull('page_name');
+                })
+                ->get()
+                ->keyBy('section_item_name');
+
+            // Process each partner from the form
+            $processedIds = [];
             foreach ($request->partners as $id => $partnerData) {
                 $partnerName = $partnerData['name'] ?? '';
                 $logoUrl = $partnerData['logo'] ?? '';
+
+                // Skip if no data
+                if (empty($partnerName) && empty($logoUrl)) {
+                    continue;
+                }
 
                 // Check if file upload exists in request for this partner
                 $dropifyKey = "partner_logo_{$id}_dropify";
@@ -1197,24 +1216,190 @@ class HomePageController extends Controller
                     }
                 }
 
+                // Use sequential storage IDs (1, 2, 3...) instead of form IDs
+                $sequentialId = count($processedIds) + 1;
+                $processedIds[] = $sequentialId;
+
                 $itemData = [
-                    'id' => (int) $id,
-                    'order' => (int) $id,
+                    'id' => $sequentialId,
+                    'order' => $sequentialId,
                     'name' => $partnerName,
                     'logo' => $logoUrl
                 ];
 
-                $this->updateOrCreateSectionItem('partners', "partner_{$id}", [
+                $this->updateOrCreateSectionItem('partners', "partner_{$sequentialId}", [
                     'section_content' => json_encode($itemData),
                     'attributes' => null,
                     'media_files' => $logoUrl ? json_encode(['source_file' => $logoUrl]) : null
                 ]);
+
+                \Log::info("Processed partner: {$sequentialId}", $itemData);
             }
+
+            // Clean up old partner items that are no longer in the form
+            foreach ($existingPartnerItems as $itemName => $item) {
+                preg_match('/partner_(\d+)$/', $itemName, $matches);
+                if ($matches && isset($matches[1])) {
+                    $id = (int) $matches[1];
+                    if (!in_array($id, $processedIds)) {
+                        \Log::info("Cleaning up old partner: {$itemName}");
+                        $item->delete();
+                    }
+                }
+            }
+
+            \Log::info("Partners update completed. Total partners: " . count($processedIds));
         }
 
         return response()->json([
             'success' => true,
             'message' => 'Partners updated successfully.'
+        ]);
+    }
+
+    /**
+     * Load certifications section data
+     */
+    private function loadCertifications()
+    {
+        $items = ContentManagement::where(function ($q) {
+                $q->where('page_name', 'home_page')->orWhereNull('page_name');
+            })
+            ->where('section_name', 'certifications')
+            ->get()
+            ->keyBy('section_item_name');
+
+        $certifications = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $certKey = 'certification_' . $i;
+            if (isset($items[$certKey]) && $items[$certKey]->section_content) {
+                $certData = json_decode($items[$certKey]->section_content, true);
+                if ($certData && is_array($certData)) {
+                    $certifications[] = [
+                        'id' => $i,
+                        'name' => $certData['name'] ?? $certData['title'] ?? '',
+                        'title' => $certData['title'] ?? $certData['name'] ?? '',
+                        'description' => $certData['description'] ?? '',
+                        'icon' => $certData['icon'] ?? '',
+                        'order' => $certData['order'] ?? $i
+                    ];
+                } else {
+                    // Handle simple string certifications
+                    $certifications[] = [
+                        'id' => $i,
+                        'name' => $items[$certKey]->section_content,
+                        'title' => $items[$certKey]->section_content,
+                        'description' => '',
+                        'icon' => '',
+                        'order' => $i
+                    ];
+                }
+            }
+        }
+
+        return [
+            'items' => $items,
+            'title' => $items['certifications_title']->section_content ?? 'Certifications & Standards',
+            'subtitle' => $items['certifications_subtitle']->section_content ?? 'Internationally recognized certifications ensuring quality and safety',
+            'certifications' => collect($certifications)->sortBy('order')->values()
+        ];
+    }
+
+    /**
+     * Update certifications section
+     */
+    private function updateCertifications(Request $request): JsonResponse
+    {
+        // Update section title
+        if ($request->has('title')) {
+            $this->updateOrCreateSectionItem('certifications', 'certifications_title', [
+                'section_content' => $request->title
+            ]);
+        }
+
+        // Update section subtitle
+        if ($request->has('subtitle')) {
+            $this->updateOrCreateSectionItem('certifications', 'certifications_subtitle', [
+                'section_content' => $request->subtitle
+            ]);
+        }
+
+        // Handle certification deletions
+        foreach ($request->all() as $key => $value) {
+            if (str_starts_with($key, 'delete_certification_') && !empty($value)) {
+                $deleteId = (int) str_replace('delete_certification_', '', $key);
+                ContentManagement::where('section_name', 'certifications')
+                    ->where('section_item_name', "certification_{$deleteId}")
+                    ->where(function ($q) {
+                        $q->where('page_name', 'home_page')->orWhereNull('page_name');
+                    })
+                    ->delete();
+            }
+        }
+
+        // Update certifications list
+        if ($request->has('certifications') && is_array($request->certifications)) {
+            // Get existing certification items to clean up later
+            $existingCertItems = ContentManagement::where('section_name', 'certifications')
+                ->where('section_item_name', 'regexp', '^certification_[0-9]+$')
+                ->where(function ($q) {
+                    $q->where('page_name', 'home_page')->orWhereNull('page_name');
+                })
+                ->get()
+                ->keyBy('section_item_name');
+
+            $processedIds = [];
+            foreach ($request->certifications as $id => $certData) {
+                $certName = $certData['name'] ?? $certData['title'] ?? '';
+                $certTitle = $certData['title'] ?? $certData['name'] ?? '';
+                $certDescription = $certData['description'] ?? '';
+                $certIcon = $certData['icon'] ?? '';
+
+                // Skip if no data
+                if (empty($certName) && empty($certTitle)) {
+                    continue;
+                }
+
+                // Use sequential storage IDs (1, 2, 3...) instead of form IDs
+                $sequentialId = count($processedIds) + 1;
+                $processedIds[] = $sequentialId;
+
+                $itemData = [
+                    'id' => $sequentialId,
+                    'order' => $sequentialId,
+                    'name' => $certName ?: $certTitle,
+                    'title' => $certTitle ?: $certName,
+                    'description' => $certDescription,
+                    'icon' => $certIcon
+                ];
+
+                $this->updateOrCreateSectionItem('certifications', "certification_{$sequentialId}", [
+                    'section_content' => json_encode($itemData),
+                    'attributes' => null,
+                    'media_files' => null
+                ]);
+
+                \Log::info("Processed certification: {$sequentialId}", $itemData);
+            }
+
+            // Clean up old certification items that are no longer in the form
+            foreach ($existingCertItems as $itemName => $item) {
+                preg_match('/certification_(\d+)$/', $itemName, $matches);
+                if ($matches && isset($matches[1])) {
+                    $id = (int) $matches[1];
+                    if (!in_array($id, $processedIds)) {
+                        \Log::info("Cleaning up old certification: {$itemName}");
+                        $item->delete();
+                    }
+                }
+            }
+
+            \Log::info("Certifications update completed. Total certifications: " . count($processedIds));
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Certifications updated successfully.'
         ]);
     }
 

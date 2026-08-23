@@ -773,6 +773,9 @@ class ContentController extends Controller
     public function getPartners()
     {
         $partnerItems = \App\Models\ContentManagement::where('section_name', 'partners')
+            ->where(function ($q) {
+                $q->where('page_name', 'home_page')->orWhereNull('page_name');
+            })
             ->get()
             ->keyBy('section_item_name');
 
@@ -781,17 +784,18 @@ class ContentController extends Controller
 
         $partners = [];
 
-        // Try new JSON format first (partner_1, partner_2, etc.)
-        $i = 1;
-        while (isset($partnerItems["partner_{$i}"]) && $partnerItems["partner_{$i}"]->section_content) {
-            $jsonData = json_decode($partnerItems["partner_{$i}"]->section_content, true);
-            if ($jsonData && isset($jsonData['name'])) {
-                $partners[] = [
-                    'name' => $jsonData['name'] ?? '',
-                    'logo' => $jsonData['logo'] ?? ''
-                ];
+        // Try JSON format first (partner_1, partner_2, etc.) - check up to 20 partners
+        for ($i = 1; $i <= 20; $i++) {
+            $partnerKey = "partner_{$i}";
+            if (isset($partnerItems[$partnerKey]) && !empty($partnerItems[$partnerKey]->section_content)) {
+                $jsonData = json_decode($partnerItems[$partnerKey]->section_content, true);
+                if ($jsonData && is_array($jsonData) && !empty($jsonData['name'])) {
+                    $partners[] = [
+                        'name' => $jsonData['name'] ?? '',
+                        'logo' => $jsonData['logo'] ?? ''
+                    ];
+                }
             }
-            $i++;
         }
 
         // If no JSON items found, try old format (partner_X_name, partner_X_logo)
@@ -813,6 +817,58 @@ class ContentController extends Controller
                 'title' => $title,
                 'subtitle' => $subtitle,
                 'list' => $partners
+            ]
+        ]);
+    }
+
+    /**
+     * Get Home Page Certifications Content
+     */
+    public function getHomeCertifications()
+    {
+        $certificationsItems = \App\Models\ContentManagement::where('section_name', 'certifications')
+            ->where(function ($q) {
+                $q->where('page_name', 'home_page')->orWhereNull('page_name');
+            })
+            ->get()
+            ->keyBy('section_item_name');
+
+        $title = $certificationsItems['certifications_title']->section_content ?? 'Certifications & Standards';
+        $subtitle = $certificationsItems['certifications_subtitle']->section_content ?? 'Internationally recognized certifications ensuring quality and safety';
+
+        $certifications = [];
+
+        // Try JSON format first (certification_1, certification_2, etc.) - check up to 20 items
+        for ($i = 1; $i <= 20; $i++) {
+            $certKey = "certification_{$i}";
+            if (isset($certificationsItems[$certKey]) && !empty($certificationsItems[$certKey]->section_content)) {
+                $jsonData = json_decode($certificationsItems[$certKey]->section_content, true);
+                if ($jsonData && is_array($jsonData)) {
+                    $certifications[] = [
+                        'name' => $jsonData['name'] ?? $jsonData['title'] ?? $jsonData,
+                        'title' => $jsonData['title'] ?? $jsonData['name'] ?? $jsonData,
+                        'description' => $jsonData['description'] ?? '',
+                        'icon' => $jsonData['icon'] ?? ''
+                    ];
+                } else {
+                    // Handle simple string certifications
+                    $certifications[] = [
+                        'name' => $certificationsItems[$certKey]->section_content,
+                        'title' => $certificationsItems[$certKey]->section_content,
+                        'description' => '',
+                        'icon' => ''
+                    ];
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'title' => $title,
+                'subtitle' => $subtitle,
+                'certifications' => $certifications,
+                'list' => $certifications // For backwards compatibility
             ]
         ]);
     }

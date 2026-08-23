@@ -669,6 +669,138 @@
                 </div>
             </div>
 
+            <!-- Certifications Section Navigation Item -->
+            <button class="cms-nav-header" onclick="toggleSection('certifications')">
+                <div class="cms-nav-label">
+                    <svg class="cms-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.638 3.167 3.42 3.42 0 001.946-.806 3.42 3.42 0 014.638 3.167 3.42 3.42 0 001.946-.806 3.42 3.42 0 014.638 3.167M3 12l1.5-3m5.5 3l3-6M3 12l6-3m6 3l6-3"></path>
+                    </svg>
+                    Certifications
+                </div>
+                <svg class="cms-nav-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            <div class="cms-nav-content" id="certifications-content">
+                <div class="alert cms-alert-success" id="alert-certifications-success"></div>
+                <div class="alert cms-alert-error" id="alert-certifications-error"></div>
+
+                <form id="certifications-form" class="cms-form" onsubmit="saveSection(event, 'certifications')">
+                    @csrf
+                    <input type="hidden" name="_method" value="PUT">
+
+                    <div class="cms-form-group">
+                        <label class="cms-form-label">Section Title</label>
+                        <input type="text" name="title" class="cms-form-input" value="{{ $cmsData['certifications']['items']['certifications_title']?->section_content ?? $cmsData['certifications']['title'] ?? 'Certifications & Standards' }}" placeholder="Certifications & Standards">
+                    </div>
+
+                    <div class="cms-form-group">
+                        <label class="cms-form-label">Section Subtitle</label>
+                        <textarea name="subtitle" class="cms-form-textarea" placeholder="Internationally recognized certifications ensuring quality and safety">{{ $cmsData['certifications']['items']['certifications_subtitle']?->section_content ?? $cmsData['certifications']['subtitle'] ?? '' }}</textarea>
+                    </div>
+
+                    <div class="form-subtitle" style="display: flex; align-items: center; justify-content: space-between;">
+                        Certifications List
+                        <span id="certifications-counter" style="font-size: 0.7rem; color: #64748b; font-weight: 600; background: rgba(59, 130, 246, 0.1); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">
+                            @php
+                                $certificationsList = $cmsData['certifications']['certifications'] ?? collect();
+                                $certificationsCount = $certificationsList->count();
+                                echo $certificationsCount . '/12';
+                            @endphp
+                        </span>
+                    </div>
+
+                    <div id="certifications-container" style="display: flex; flex-direction: column; gap: 1rem;">
+                        @if($certificationsList && $certificationsList->count() > 0)
+                            @foreach($certificationsList as $index => $certification)
+                                <div class="cms-value-item" style="background: #0f172a; border: 1px solid #334155; border-radius: 0.5rem; padding: 1rem; position: relative;">
+                                    <!-- Delete Button -->
+                                    <button type="button" onclick="deleteCertification({{ $certification['id'] }})" style="position: absolute; top: 0.5rem; right: 0.5rem; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: none; border-radius: 0.25rem; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
+                                        <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+
+                                    <input type="hidden" name="delete_certification_{{ $certification['id'] }}" id="delete_certification_{{ $certification['id'] }}" value="">
+
+                                    <div class="cms-form-group">
+                                        <label class="cms-form-label">Certification Name/Title</label>
+                                        <input type="text" name="certifications[{{ $certification['id'] }}][name]" class="cms-form-input" value="{{ $certification['name'] }}" placeholder="ISO 9001:2015">
+                                    </div>
+
+                                    <div class="cms-form-group">
+                                        <label class="cms-form-label">Description (Optional)</label>
+                                        <textarea name="certifications[{{ $certification['id'] }}][description]" class="cms-form-textarea" placeholder="Quality management system certification">{{ $certification['description'] }}</textarea>
+                                    </div>
+
+                                    <div class="cms-form-group">
+                                        <label class="cms-form-label">Icon/Emoji (Optional)</label>
+                                        <input type="text" name="certifications[{{ $certification['id'] }}][icon]" class="cms-form-input" value="{{ $certification['icon'] }}" placeholder="🏆">
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <div id="no-certifications-message" style="text-align: center; padding: 2rem; color: #64748b; background: #0f172a; border-radius: 0.5rem; border: 1px dashed #334155;">
+                                <svg style="width: 32px; height: 32px; margin: 0 auto 0.75rem; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.638 3.167 3.42 3.42 0 001.946-.806 3.42 3.42 0 014.638 3.167M3 12l1.5-3m5.5 3l3-6M3 12l6-3m6 3l6-3"></path>
+                                </svg>
+                                <p style="font-size: 0.875rem;">No certifications found. Click "Add New Certification" to create your first certification.</p>
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Add New Certification Button -->
+                    @php
+                        $certificationsCount = $certificationsList->count();
+                        $maxCertifications = 12;
+                        $remainingCertSlots = $maxCertifications - $certificationsCount;
+                        $isMaxCertReached = $certificationsCount >= $maxCertifications;
+                    @endphp
+                    <button
+                        id="add-certification-btn"
+                        onclick="addNewCertification()"
+                        @if($isMaxCertReached)
+                            disabled
+                            style="margin-top: 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.75rem; padding: 1.5rem; background: #0f172a; border: 2px dashed #334155; border-radius: 0.5rem; cursor: not-allowed; opacity: 0.5; pointer-events: none;"
+                        @else
+                            style="margin-top: 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.75rem; padding: 1.5rem; background: #0f172a; border: 2px dashed #334155; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;"
+                        @endif
+                        data-current-count="{{ $certificationsCount }}"
+                        data-max-certifications="{{ $maxCertifications }}"
+                        data-remaining-slots="{{ $remainingCertSlots }}">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center;">
+                            @if($isMaxCertReached)
+                                <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728a9 9 0 01-12.728 0m12.728-12.728a9 9 0 00-12.728 0"></path>
+                                </svg>
+                            @else
+                                <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                            @endif
+                        </div>
+                        <span style="font-weight: 600; color: #94a3b8; font-size: 0.875rem;">
+                            @if($isMaxCertReached)
+                                Maximum Certifications Reached
+                            @else
+                                Add New Certification
+                            @endif
+                        </span>
+                        <span id="add-certification-status" style="color: #64748b; font-size: 0.75rem;">
+                            @if($isMaxCertReached)
+                                Maximum 12 certifications allowed
+                            @elseif($remainingCertSlots === 1)
+                                1 certification slot remaining
+                            @else
+                                Click to add a new certification ({{ $remainingCertSlots }} slots remaining)
+                            @endif
+                        </span>
+                    </button>
+
+                    <button type="submit" class="cms-btn cms-btn-success" style="margin-top: 1rem;">Save Certifications</button>
+                </form>
+            </div>
+
             <!-- Subscription Section Navigation Item -->
             <button class="cms-nav-header" onclick="toggleSection('subscription-section')">
                 <div class="cms-nav-label">
@@ -1531,6 +1663,231 @@
                     .join(' ');
             }
 
+            // Certification Functions
+            window.addNewCertification = function() {
+                const container = document.getElementById('certifications-container');
+                const maxCertifications = 12;
+
+                if (!container) {
+                    console.error('Certifications container not found');
+                    return;
+                }
+
+                const currentCount = container.querySelectorAll('.cms-value-item').length;
+                const remainingSlots = maxCertifications - currentCount;
+
+                console.log('=== addNewCertification called ===');
+                console.log('Current certifications in container:', currentCount);
+                console.log('Max certifications:', maxCertifications);
+                console.log('Remaining slots:', remainingSlots);
+
+                if (currentCount >= maxCertifications) {
+                    alert(`Maximum ${maxCertifications} certifications allowed. You have reached the limit (${currentCount}/${maxCertifications}).`);
+                    console.log('❌ Cannot add certification - limit reached');
+                    return;
+                }
+
+                if (remainingSlots <= 0) {
+                    alert(`Cannot add more certifications. Maximum ${maxCertifications} allowed. Current: ${currentCount}`);
+                    console.log('❌ Cannot add certification - no remaining slots');
+                    return;
+                }
+
+                console.log('✓ Certification addition allowed');
+
+                // Find the next available sequential ID
+                let newId = 1;
+                const existingCertifications = container.querySelectorAll('.cms-value-item');
+                existingCertifications.forEach(cert => {
+                    const inputs = cert.querySelectorAll('input[name^="certifications["]');
+                    inputs.forEach(input => {
+                        const match = input.name.match(/certifications\[(\d+)\]/);
+                        if (match) {
+                            const id = parseInt(match[1]);
+                            if (id >= newId) {
+                                newId = id + 1;
+                            }
+                        }
+                    });
+                });
+
+                console.log('🔍 Next sequential ID:', newId);
+                const certificationHtml = `
+                    <div class="cms-value-item" style="background: #0f172a; border: 1px solid #334155; border-radius: 0.5rem; padding: 1rem; position: relative;">
+                        <button type="button" onclick="deleteCertification(${newId})" style="position: absolute; top: 0.5rem; right: 0.5rem; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: none; border-radius: 0.25rem; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
+                            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+
+                        <input type="hidden" name="delete_certification_${newId}" id="delete_certification_${newId}" value="">
+
+                        <div class="cms-form-group">
+                            <label class="cms-form-label">Certification Name/Title</label>
+                            <input type="text" name="certifications[${newId}][name]" class="cms-form-input" placeholder="ISO 9001:2015">
+                        </div>
+
+                        <div class="cms-form-group">
+                            <label class="cms-form-label">Description (Optional)</label>
+                            <textarea name="certifications[${newId}][description]" class="cms-form-textarea" placeholder="Quality management system certification"></textarea>
+                        </div>
+
+                        <div class="cms-form-group">
+                            <label class="cms-form-label">Icon/Emoji (Optional)</label>
+                            <input type="text" name="certifications[${newId}][icon]" class="cms-form-input" placeholder="🏆">
+                        </div>
+                    </div>
+                `;
+
+                // Remove empty state message if present
+                const noCertificationsMsg = document.getElementById('no-certifications-message');
+                if (noCertificationsMsg) {
+                    noCertificationsMsg.remove();
+                }
+
+                // Insert inside the certifications-container
+                console.log('🔍 BEFORE insertion - Current DOM count:', container.querySelectorAll('.cms-value-item').length);
+                container.insertAdjacentHTML('beforeend', certificationHtml);
+                console.log('🔍 AFTER insertion - DOM count:', container.querySelectorAll('.cms-value-item').length);
+
+                updateCertificationsCounter();
+                console.log('=== addNewCertification complete ===');
+            };
+
+            window.deleteCertification = function(id) {
+                const deleteField = document.getElementById('delete_certification_' + id);
+                if (deleteField) {
+                    deleteField.value = '1';
+                }
+
+                const certificationItem = deleteField ? deleteField.closest('.cms-value-item') : null;
+                if (certificationItem) {
+                    certificationItem.remove();
+                }
+
+                updateCertificationsCounter();
+
+                // If no certifications left, show the empty message
+                const container = document.getElementById('certifications-container');
+                if (container && container.querySelectorAll('.cms-value-item').length === 0) {
+                    const emptyHtml = `
+                        <div id="no-certifications-message" style="text-align: center; padding: 2rem; color: #64748b; background: #0f172a; border-radius: 0.5rem; border: 1px dashed #334155;">
+                            <svg style="width: 32px; height: 32px; margin: 0 auto 0.75rem; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.638 3.167 3.42 3.42 0 001.946-.806 3.42 3.42 0 014.638 3.167M3 12l1.5-3m5.5 3l3-6M3 12l6-3m6 3l6-3"></path>
+                            </svg>
+                            <p style="font-size: 0.875rem;">No certifications found. Click "Add New Certification" to create your first certification.</p>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', emptyHtml);
+                }
+            };
+
+            window.updateCertificationsCounter = function() {
+                const container = document.getElementById('certifications-container');
+                const addButton = document.getElementById('add-certification-btn');
+                const maxCertifications = 12;
+
+                if (!container) {
+                    console.error('❌ Certifications container not found');
+                    return;
+                }
+
+                const actualCount = container.querySelectorAll('.cms-value-item').length;
+                const remainingSlots = maxCertifications - actualCount;
+
+                console.log('=== updateCertificationsCounter DEBUG ===');
+                console.log('🔍 Container exists:', !!container);
+                console.log('🔍 .cms-value-item elements found:', actualCount);
+                console.log('🔍 maxCertifications:', maxCertifications);
+                console.log('🔍 remainingSlots:', remainingSlots);
+
+                // Update counter display
+                const counter = document.getElementById('certifications-counter');
+                if (counter) {
+                    counter.textContent = actualCount + '/' + maxCertifications;
+                    console.log('✅ Counter updated to:', actualCount + '/' + maxCertifications);
+                }
+
+                // Update add button status
+                const status = document.getElementById('add-certification-status');
+                if (status && addButton) {
+                    if (actualCount >= maxCertifications) {
+                        status.textContent = 'Maximum certifications reached';
+                        addButton.style.opacity = '0.5';
+                        addButton.style.pointerEvents = 'none';
+                        addButton.disabled = true;
+                        console.log('✅ Button DISABLED (max reached)');
+                    } else if (remainingSlots === 1) {
+                        status.textContent = '1 certification slot remaining';
+                        addButton.style.opacity = '1';
+                        addButton.style.pointerEvents = 'auto';
+                        addButton.disabled = false;
+                        console.log('✅ Button enabled (1 slot remaining)');
+                    } else {
+                        status.textContent = `Click to add a new certification (${remainingSlots} slots remaining)`;
+                        addButton.style.opacity = '1';
+                        addButton.style.pointerEvents = 'auto';
+                        addButton.disabled = false;
+                        console.log(`✅ Button enabled (${remainingSlots} slots remaining)`);
+                    }
+                }
+
+                console.log('=== updateCertificationsCounter complete ===\n');
+            };
+
+            // Initialize certifications counter on page load
+            window.initializeCertificationsCounter = function() {
+                const container = document.getElementById('certifications-container');
+                const addButton = document.getElementById('add-certification-btn');
+                if (!addButton || !container) return;
+
+                const actualCount = container.querySelectorAll('.cms-value-item').length;
+                const maxCertifications = parseInt(addButton.dataset.maxCertifications || '12');
+                const remainingSlots = maxCertifications - actualCount;
+
+                console.log('=== initializeCertificationsCounter ===');
+                console.log('Elements in container:', actualCount);
+                console.log('Max certifications:', maxCertifications);
+                console.log('Remaining slots:', remainingSlots);
+
+                // Update counter display
+                const counter = document.getElementById('certifications-counter');
+                if (counter) {
+                    counter.textContent = actualCount + '/' + maxCertifications;
+                }
+
+                // Update add button status based on actual count
+                const status = document.getElementById('add-certification-status');
+                if (status) {
+                    if (actualCount >= maxCertifications) {
+                        status.textContent = 'Maximum certifications reached';
+                        addButton.style.opacity = '0.5';
+                        addButton.style.pointerEvents = 'none';
+                        addButton.disabled = true;
+                        console.log('✓ Maximum reached on init - Button disabled');
+                    } else if (remainingSlots === 1) {
+                        status.textContent = '1 certification slot remaining';
+                        addButton.style.opacity = '1';
+                        addButton.style.pointerEvents = 'auto';
+                        addButton.disabled = false;
+                        console.log('✓ 1 slot remaining on init - Button enabled');
+                    } else {
+                        status.textContent = `Click to add a new certification (${remainingSlots} slots remaining)`;
+                        addButton.style.opacity = '1';
+                        addButton.style.pointerEvents = 'auto';
+                        addButton.disabled = false;
+                        console.log(`✓ ${remainingSlots} slots remaining on init - Button enabled`);
+                    }
+                }
+
+                console.log('=== initializeCertificationsCounter complete ===\n');
+                return {
+                    actualCount: actualCount,
+                    maxCertifications: maxCertifications,
+                    remainingSlots: remainingSlots
+                };
+            };
+
             // Show loading overlay
             function showLoading() {
                 document.getElementById('loading-overlay').style.display = 'flex';
@@ -1611,7 +1968,8 @@
                     const response = await fetch(routeUrl, {
                         method: 'PUT',
                         headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
                         },
                         body: formData
                     });
@@ -1679,7 +2037,23 @@
 
                 console.log('✓ Partner addition allowed');
 
-                const newId = Date.now(); // Temporary ID
+                // Find the next available sequential ID
+                let newId = 1;
+                const existingPartners = container.querySelectorAll('.cms-value-item');
+                existingPartners.forEach(partner => {
+                    const inputs = partner.querySelectorAll('input[name^="partners["]');
+                    inputs.forEach(input => {
+                        const match = input.name.match(/partners\[(\d+)\]/);
+                        if (match) {
+                            const id = parseInt(match[1]);
+                            if (id >= newId) {
+                                newId = id + 1;
+                            }
+                        }
+                    });
+                });
+
+                console.log('🔍 Next sequential ID:', newId);
                 const partnerHtml = `
                     <div class="cms-value-item" style="background: #0f172a; border: 1px solid #334155; border-radius: 0.5rem; padding: 1rem; position: relative;">
                         <button type="button" onclick="this.parentElement.remove(); updatePartnersCounter();" style="position: absolute; top: 0.5rem; right: 0.5rem; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: none; border-radius: 0.25rem; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
@@ -1904,6 +2278,11 @@
 
                 // Initialize partners counter on page load
                 initializePartnersCounter();
+
+                // Initialize certifications counter
+                if (typeof initializeCertificationsCounter === 'function') {
+                    initializeCertificationsCounter();
+                }
 
                 // Don't initialize Dropify on page load for hidden sections
                 // Dropify will be initialized when sections are opened

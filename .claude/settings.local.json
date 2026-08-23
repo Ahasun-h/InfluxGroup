@@ -37,7 +37,8 @@
       "Bash(echo 3. VUE PREVIEW PAGES ACCESS TEST::*)",
       "Bash(tasklist:*)",
       "Bash(timeout 3 bash:*)",
-      "Bash(cd D:\\\\Herd\\\\InfluxGroup-backend\\\\InfluxGroup:*)"
+      "Bash(cd D:\\\\Herd\\\\InfluxGroup-backend\\\\InfluxGroup:*)",
+      "Bash(cmd.exe:*)"
     ]
   }
 }

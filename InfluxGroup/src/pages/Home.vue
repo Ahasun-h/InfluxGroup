@@ -806,11 +806,21 @@ const timeline = computed(() => {
   ]
 })
 
-// Certifications from About page
-const certifications = [
-  'ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018',
-  'IEC 60076', 'IEEE Standards', 'BPDB Approved'
-]
+// Certifications - using Partners component for dynamic data
+const certifications = computed(() => {
+  // Use partners data if available
+  if (partnersData.value?.list && partnersData.value.list.length > 0) {
+    console.log('Using partners data for certifications:', partnersData.value)
+    return partnersData.value.list.map(partner => partner.name || partner)
+  }
+
+  // Fallback to hardcoded certifications
+  console.log('Using fallback certifications')
+  return [
+    'ISO 9001:2015', 'ISO 14001:2015', 'ISO 45001:2018',
+    'IEC 60076', 'IEEE Standards', 'BPDB Approved'
+  ]
+})
 
 // Product Categories from Products page - now using dynamic data from API
 const productCategoryList = computed(() => {
@@ -1185,31 +1195,15 @@ const contactCta = computed(() => {
       :highlighted-word="'VALUES'"
     />
 
-    <!-- Certifications (from About page) -->
-    <section class="py-16 md:py-24 bg-white text-industrial-dark">
-      <div class="max-w-7xl mx-auto px-6">
-        <div class="text-center mb-12" v-motion-slide-visible-bottom>
-          <h2 class="text-3xl md:text-4xl font-display font-black uppercase italic mb-6 text-industrial-dark">
-            Certifications & <span class="text-industrial-blue">Standards</span>
-          </h2>
-          <p class="text-slate-600 text-base md:text-lg max-w-2xl mx-auto">
-            Internationally recognized certifications ensuring quality and safety
-          </p>
-        </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
-          <div
-            v-for="(cert, index) in certifications"
-            :key="index"
-            class="bg-industrial-light p-4 md:p-6 rounded-lg text-center hover:bg-industrial-blue hover:text-white transition-all group"
-            v-motion-slide-visible-bottom
-            :delay="index * 100"
-          >
-            <div class="font-black uppercase text-[10px] md:text-xs tracking-wider">{{ cert }}</div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <!-- Certifications (from About page) - using Partners component -->
+    <PartnersSection
+      :partners-data="{
+        title: 'Certifications & Standards',
+        subtitle: 'Internationally recognized certifications ensuring quality and safety',
+        list: certifications.map(cert => ({ name: cert, logo: cert.charAt(0) }))
+      }"
+      :homepage-data="null"
+    />
 
     <!-- Featured Products (from Products page) -->
     <section class="py-20 md:py-32 bg-industrial-light">

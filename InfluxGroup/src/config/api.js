@@ -44,6 +44,7 @@ export const API_ENDPOINTS = {
   // Testimonials & Partners
   TESTIMONIALS: '/cms/testimonials',
   PARTNERS: '/cms/partners',
+  HOME_CERTIFICATIONS: '/cms/home-certifications',
   FOOTER: '/cms/footer',
 
   // Service Categories
